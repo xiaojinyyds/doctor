@@ -1,0 +1,71 @@
+# ===== OS / Editor =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+.idea/
+.vscode/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# virtualenvs
+venv/
+.venv/
+ENV/
+env/
+
+# ===== Node / Frontend =====
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+**/.cache/
+**/.turbo/
+
+# ===== Logs / runtime =====
+**/logs/
+*.log
+
+# uploads / generated runtime files (backend default)
+**/uploads/
+
+# ===== Secrets / local env files (DO NOT COMMIT) =====
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Frontend envs (present in art-design-pro)
+art-design-pro/.env
+art-design-pro/.env.*
+
+# Backend env file (present but no extension)
+backend/.env
+
+# ===== Data / artifacts =====
+# Datasets and outputs are usually large/private. Keep only small samples or docs tracked.
+data/
+
+# Model weights / large binaries (prefer Git LFS or download at deploy time)
+*.pth
+*.pt
+*.onnx
+*.ckpt
+*.safetensors
+
+# Archives
+*.zip
+*.7z
+*.rar
+
+# ===== Cursor rules (optional local) =====
+.cursorrules

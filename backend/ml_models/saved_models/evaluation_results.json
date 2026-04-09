@@ -1,0 +1,36 @@
+{
+  "test_accuracy": 86.44067796610169,
+  "classification_report": {
+    "正常": {
+      "precision": 0.85,
+      "recall": 0.85,
+      "f1-score": 0.85,
+      "support": 20.0
+    },
+    "良性": {
+      "precision": 0.8591549295774648,
+      "recall": 0.9242424242424242,
+      "f1-score": 0.8905109489051095,
+      "support": 66.0
+    },
+    "恶性": {
+      "precision": 0.8888888888888888,
+      "recall": 0.75,
+      "f1-score": 0.8135593220338982,
+      "support": 32.0
+    },
+    "accuracy": 0.864406779661017,
+    "macro avg": {
+      "precision": 0.8660146061554511,
+      "recall": 0.8414141414141415,
+      "f1-score": 0.8513567569796693,
+      "support": 118.0
+    },
+    "weighted avg": {
+      "precision": 0.865666693191162,
+      "recall": 0.864406779661017,
+      "f1-score": 0.8627764485832371,
+      "support": 118.0
+    }
+  }
+}

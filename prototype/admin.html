@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 肿瘤数智化筛查系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-brand {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 15px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            margin: -30px -30px 30px -30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+        
+        .stat-icon.blue { background: #e6f7ff; color: #1890ff; }
+        .stat-icon.green { background: #f6ffed; color: #52c41a; }
+        .stat-icon.orange { background: #fff7e6; color: #fa8c16; }
+        .stat-icon.red { background: #fff1f0; color: #f5222d; }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .chart-container {
+            height: 350px;
+        }
+        
+        .table-actions button {
+            padding: 5px 12px;
+            font-size: 0.85rem;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+        
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+        
+        .status-disabled {
+            background: #fff1f0;
+            color: #f5222d;
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-heart-pulse-fill"></i> 管理后台
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="#dashboard" class="active" onclick="showSection('dashboard')">
+                    <i class="bi bi-speedometer2"></i> 数据概览
+                </a>
+            </li>
+            <li>
+                <a href="#users" onclick="showSection('users')">
+                    <i class="bi bi-people"></i> 用户管理
+                </a>
+            </li>
+            <li>
+                <a href="#records" onclick="showSection('records')">
+                    <i class="bi bi-file-earmark-medical"></i> 筛查记录
+                </a>
+            </li>
+            <li>
+                <a href="#statistics" onclick="showSection('statistics')">
+                    <i class="bi bi-graph-up"></i> 统计分析
+                </a>
+            </li>
+            <li>
+                <a href="#model" onclick="showSection('model')">
+                    <i class="bi bi-cpu"></i> 模型管理
+                </a>
+            </li>
+            <li>
+                <a href="#settings" onclick="showSection('settings')">
+                    <i class="bi bi-gear"></i> 系统设置
+                </a>
+            </li>
+        </ul>
+        
+        <div class="mt-5 pt-5 border-top border-light">
+            <a href="index.html" class="btn btn-outline-light w-100">
+                <i class="bi bi-box-arrow-right"></i> 退出登录
+            </a>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <h4 class="mb-0">欢迎回来，管理员</h4>
+            <div>
+                <button class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-bell"></i> 通知 <span class="badge bg-danger">3</span>
+                </button>
+                <button class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-person-circle"></i> admin@demo.com
+                </button>
+            </div>
+        </div>
+
+        <!-- 数据概览 -->
+        <div id="dashboard" class="content-section">
+            <h5 class="mb-4">数据概览</h5>
+            
+            <!-- 统计卡片 -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="stat-number">10,247</div>
+                        <div class="stat-label">总用户数</div>
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> 较上月 +12.5%
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                        <div class="stat-number">52,890</div>
+                        <div class="stat-label">筛查次数</div>
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> 较上月 +8.3%
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-number">2,145</div>
+                        <div class="stat-label">高危人群</div>
+                        <small class="text-danger">
+                            <i class="bi bi-arrow-up"></i> 较上月 +3.2%
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon red">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+                        <div class="stat-number">1,523</div>
+                        <div class="stat-label">今日活跃</div>
+                        <small class="text-success">
+                            <i class="bi bi-arrow-up"></i> 较昨日 +5.8%
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图表 -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="content-card">
+                        <h6 class="mb-4">用户增长趋势</h6>
+                        <div id="userTrendChart" class="chart-container"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="content-card">
+                        <h6 class="mb-4">风险分布</h6>
+                        <div id="riskPieChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户管理 -->
+        <div id="users" class="content-section" style="display: none;">
+            <div class="content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">用户管理</h5>
+                    <div>
+                        <input type="text" class="form-control form-control-sm d-inline-block w-auto me-2" 
+                               placeholder="搜索用户...">
+                        <button class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus"></i> 添加用户
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>用户ID</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>筛查次数</th>
+                                <th>注册时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#10247</td>
+                                <td>user001@example.com</td>
+                                <td><span class="badge bg-primary">普通用户</span></td>
+                                <td>5</td>
+                                <td>2024-10-10</td>
+                                <td><span class="status-badge status-active">正常</span></td>
+                                <td class="table-actions">
+                                    <button class="btn btn-outline-primary btn-sm me-1">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm me-1">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#10246</td>
+                                <td>doctor@example.com</td>
+                                <td><span class="badge bg-success">医生</span></td>
+                                <td>0</td>
+                                <td>2024-10-08</td>
+                                <td><span class="status-badge status-active">正常</span></td>
+                                <td class="table-actions">
+                                    <button class="btn btn-outline-primary btn-sm me-1">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm me-1">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#10245</td>
+                                <td>user002@example.com</td>
+                                <td><span class="badge bg-primary">普通用户</span></td>
+                                <td>12</td>
+                                <td>2024-10-05</td>
+                                <td><span class="status-badge status-disabled">已禁用</span></td>
+                                <td class="table-actions">
+                                    <button class="btn btn-outline-primary btn-sm me-1">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm me-1">
+                                        <i class="bi bi-check-circle"></i> 启用
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav>
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- 筛查记录 -->
+        <div id="records" class="content-section" style="display: none;">
+            <div class="content-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">筛查记录管理</h5>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm me-2">
+                            <i class="bi bi-filter"></i> 筛选
+                        </button>
+                        <button class="btn btn-success btn-sm">
+                            <i class="bi bi-file-earmark-excel"></i> 导出Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>记录ID</th>
+                                <th>用户</th>
+                                <th>评估时间</th>
+                                <th>风险分数</th>
+                                <th>风险等级</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#52890</td>
+                                <td>user001@example.com</td>
+                                <td>2024-10-12 10:30</td>
+                                <td><strong>68</strong></td>
+                                <td><span class="badge bg-danger">高风险</span></td>
+                                <td class="table-actions">
+                                    <button class="btn btn-outline-primary btn-sm me-1">
+                                        <i class="bi bi-eye"></i> 查看
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#52889</td>
+                                <td>user003@example.com</td>
+                                <td>2024-10-12 09:15</td>
+                                <td><strong>45</strong></td>
+                                <td><span class="badge bg-warning">中风险</span></td>
+                                <td class="table-actions">
+                                    <button class="btn btn-outline-primary btn-sm me-1">
+                                        <i class="bi bi-eye"></i> 查看
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>#52888</td>
+                                <td>user002@example.com</td>
+                                <td>2024-10-11 16:45</td>
+                                <td><strong>32</strong></td>
+                                <td><span class="badge bg-success">低风险</span></td>
+                                <td class="table-actions">
+                                    <button class="btn btn-outline-primary btn-sm me-1">
+                                        <i class="bi bi-eye"></i> 查看
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计分析 -->
+        <div id="statistics" class="content-section" style="display: none;">
+            <h5 class="mb-4">统计分析</h5>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="content-card">
+                        <h6 class="mb-4">筛查趋势</h6>
+                        <div id="screeningTrendChart" class="chart-container"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="content-card">
+                        <h6 class="mb-4">高危因素Top10</h6>
+                        <div id="factorBarChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模型管理 -->
+        <div id="model" class="content-section" style="display: none;">
+            <div class="content-card">
+                <h5 class="mb-4">模型管理</h5>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>当前模型：</strong>XGBoost v1.2 | 准确率：87.5% | 更新时间：2024-10-01
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>模型性能指标</h6>
+                        <table class="table">
+                            <tr>
+                                <td>准确率 (Accuracy)</td>
+                                <td><strong>87.5%</strong></td>
+                            </tr>
+                            <tr>
+                                <td>召回率 (Recall)</td>
+                                <td><strong>85.2%</strong></td>
+                            </tr>
+                            <tr>
+                                <td>精确率 (Precision)</td>
+                                <td><strong>83.8%</strong></td>
+                            </tr>
+                            <tr>
+                                <td>F1 Score</td>
+                                <td><strong>0.845</strong></td>
+                            </tr>
+                            <tr>
+                                <td>AUC</td>
+                                <td><strong>0.912</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>模型操作</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary">
+                                <i class="bi bi-upload"></i> 上传新模型
+                            </button>
+                            <button class="btn btn-outline-success">
+                                <i class="bi bi-play"></i> 测试模型
+                            </button>
+                            <button class="btn btn-outline-warning">
+                                <i class="bi bi-arrow-counterclockwise"></i> 回滚到上一版本
+                            </button>
+                            <button class="btn btn-outline-danger">
+                                <i class="bi bi-trash"></i> 删除模型
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统设置 -->
+        <div id="settings" class="content-section" style="display: none;">
+            <div class="content-card">
+                <h5 class="mb-4">系统设置</h5>
+                
+                <form>
+                    <h6>邮件配置</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">SMTP服务器</label>
+                            <input type="text" class="form-control" value="smtp.qq.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SMTP端口</label>
+                            <input type="number" class="form-control" value="587">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h6>安全设置</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">JWT过期时间（天）</label>
+                            <input type="number" class="form-control" value="7">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">密码最小长度</label>
+                            <input type="number" class="form-control" value="8">
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="require2fa" checked>
+                        <label class="form-check-label" for="require2fa">
+                            要求管理员启用两步验证
+                        </label>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h6>功能开关</h6>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="enableRegistration" checked>
+                        <label class="form-check-label" for="enableRegistration">
+                            允许用户注册
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="enableImageUpload" checked>
+                        <label class="form-check-label" for="enableImageUpload">
+                            允许上传医学影像
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="enableShareReport" checked>
+                        <label class="form-check-label" for="enableShareReport">
+                            允许分享报告
+                        </label>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> 保存设置
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary">
+                            取消
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 切换内容区
+        function showSection(section) {
+            document.querySelectorAll('.content-section').forEach(el => {
+                el.style.display = 'none';
+            });
+            document.getElementById(section).style.display = 'block';
+            
+            // 更新菜单激活状态
+            document.querySelectorAll('.sidebar-menu a').forEach(a => {
+                a.classList.remove('active');
+            });
+            event.target.closest('a').classList.add('active');
+        }
+
+        // 用户增长趋势图
+        const userTrendChart = echarts.init(document.getElementById('userTrendChart'));
+        const userTrendOption = {
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['新增用户', '总用户']
+            },
+            xAxis: {
+                type: 'category',
+                data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    name: '新增用户',
+                    type: 'bar',
+                    data: [320, 380, 450, 520, 680, 720, 890, 950, 1020, 1150],
+                    itemStyle: { color: '#1890ff' }
+                },
+                {
+                    name: '总用户',
+                    type: 'line',
+                    data: [320, 700, 1150, 1670, 2350, 3070, 3960, 4910, 5930, 7080],
+                    itemStyle: { color: '#52c41a' }
+                }
+            ]
+        };
+        userTrendChart.setOption(userTrendOption);
+
+        // 风险分布饼图
+        const riskPieChart = echarts.init(document.getElementById('riskPieChart'));
+        const riskPieOption = {
+            tooltip: {
+                trigger: 'item'
+            },
+            series: [{
+                name: '风险分布',
+                type: 'pie',
+                radius: '60%',
+                data: [
+                    { value: 3045, name: '低风险', itemStyle: { color: '#52c41a' } },
+                    { value: 4102, name: '中风险', itemStyle: { color: '#faad14' } },
+                    { value: 2145, name: '高风险', itemStyle: { color: '#fa8c16' } },
+                    { value: 955, name: '极高风险', itemStyle: { color: '#f5222d' } }
+                ],
+                label: {
+                    formatter: '{b}\n{c} ({d}%)'
+                }
+            }]
+        };
+        riskPieChart.setOption(riskPieOption);
+
+        // 筛查趋势图
+        const screeningTrendChart = echarts.init(document.getElementById('screeningTrendChart'));
+        const screeningTrendOption = {
+            tooltip: { trigger: 'axis' },
+            xAxis: {
+                type: 'category',
+                data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月']
+            },
+            yAxis: { type: 'value', name: '筛查次数' },
+            series: [{
+                data: [1200, 1500, 1800, 2100, 2600, 3200, 3800, 4200, 4800, 5300],
+                type: 'line',
+                smooth: true,
+                itemStyle: { color: '#1890ff' },
+                areaStyle: { opacity: 0.3 }
+            }]
+        };
+        screeningTrendChart.setOption(screeningTrendOption);
+
+        // 高危因素Top10柱状图
+        const factorBarChart = echarts.init(document.getElementById('factorBarChart'));
+        const factorBarOption = {
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'value' },
+            yAxis: {
+                type: 'category',
+                data: ['BMI过高', '睡眠不足', '饮食不均', '缺乏运动', '高盐饮食',
+                       '慢性病史', '家族史', '饮酒', '年龄', '吸烟']
+            },
+            series: [{
+                type: 'bar',
+                data: [820, 932, 1100, 1280, 1450, 1680, 1920, 2150, 2280, 2890],
+                itemStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                        { offset: 0, color: '#fa8c16' },
+                        { offset: 1, color: '#f5222d' }
+                    ])
+                }
+            }]
+        };
+        factorBarChart.setOption(factorBarOption);
+
+        // 响应式调整
+        window.addEventListener('resize', () => {
+            userTrendChart.resize();
+            riskPieChart.resize();
+            screeningTrendChart.resize();
+            factorBarChart.resize();
+        });
+    </script>
+</body>
+</html>
+

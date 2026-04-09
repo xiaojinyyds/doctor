@@ -1,0 +1,606 @@
+{
+  "测试说明": {
+    "接口地址": "POST /api/v1/assessment/submit",
+    "认证方式": "需要在请求头添加: Authorization: Bearer <token>",
+    "测试账号": {
+      "account": "17787905152@163.com",
+      "password": "huanlei0329"
+    },
+    "使用步骤": [
+      "1. 先调用登录接口 POST /api/v1/auth/login 获取token",
+      "2. 复制返回的 access_token",
+      "3. 在评估接口请求头添加: Authorization: Bearer <token>",
+      "4. 选择下面的测试场景数据进行测试"
+    ],
+    "字段说明": {
+      "age": "年龄(1-120)",
+      "gender": "性别(男/女)",
+      "height": "身高cm(0-300)",
+      "weight": "体重kg(0-500)",
+      "smoking": "吸烟(0=否, 1=是)",
+      "genetic_risk": "遗传风险(0=低, 1=中, 2=高)",
+      "physical_activity": "运动量(小时/周, 0-168)",
+      "alcohol_intake": "饮酒量(单位/周, 0-50)",
+      "cancer_history": "癌症病史(0=否, 1=是)",
+      "family_history": "家族病史(可选)",
+      "symptoms": "症状(可选)",
+      "chronic_diseases": "慢性病(可选)",
+      "notes": "备注(可选)"
+    }
+  },
+  
+  "场景1_低风险用户": {
+    "描述": "年轻、健康生活方式、无家族史",
+    "数据": {
+      "age": 28,
+      "gender": "女",
+      "height": 165,
+      "weight": 55,
+      "smoking": 0,
+      "genetic_risk": 0,
+      "physical_activity": 5,
+      "alcohol_intake": 0,
+      "cancer_history": 0,
+      "family_history": [],
+      "symptoms": [],
+      "chronic_diseases": [],
+      "notes": "定期体检，身体健康"
+    },
+    "预期结果": "低风险"
+  },
+  
+  "场景2_中等风险用户": {
+    "描述": "中年、有轻度不良习惯",
+    "数据": {
+      "age": 45,
+      "gender": "男",
+      "height": 175,
+      "weight": 75,
+      "smoking": 1,
+      "genetic_risk": 1,
+      "physical_activity": 3.5,
+      "alcohol_intake": 2.0,
+      "cancer_history": 0,
+      "family_history": ["胃癌", "肺癌"],
+      "symptoms": ["咳嗽"],
+      "chronic_diseases": ["高血压"],
+      "notes": "最近体检发现肺部有小结节"
+    },
+    "预期结果": "中等风险"
+  },
+  
+  "场景3_高风险用户": {
+    "描述": "老年、多重高危因素",
+    "数据": {
+      "age": 65,
+      "gender": "男",
+      "height": 170,
+      "weight": 85,
+      "smoking": 1,
+      "genetic_risk": 2,
+      "physical_activity": 1,
+      "alcohol_intake": 5,
+      "cancer_history": 1,
+      "family_history": ["肺癌", "肝癌", "胃癌"],
+      "symptoms": ["持续咳嗽", "体重下降", "胸痛"],
+      "chronic_diseases": ["高血压", "糖尿病", "冠心病"],
+      "notes": "有20年吸烟史，父亲因肺癌去世"
+    },
+    "预期结果": "高风险"
+  },
+  
+  "场景4_年轻吸烟者": {
+    "描述": "年轻但有吸烟习惯",
+    "数据": {
+      "age": 32,
+      "gender": "男",
+      "height": 178,
+      "weight": 72,
+      "smoking": 1,
+      "genetic_risk": 0,
+      "physical_activity": 4,
+      "alcohol_intake": 3,
+      "cancer_history": 0,
+      "family_history": [],
+      "symptoms": ["偶尔咳嗽"],
+      "chronic_diseases": [],
+      "notes": "吸烟10年，每天1包"
+    },
+    "预期结果": "中低风险"
+  },
+  
+  "场景5_超重中年女性": {
+    "描述": "BMI超标、缺乏运动",
+    "数据": {
+      "age": 50,
+      "gender": "女",
+      "height": 160,
+      "weight": 75,
+      "smoking": 0,
+      "genetic_risk": 1,
+      "physical_activity": 0.5,
+      "alcohol_intake": 0,
+      "cancer_history": 0,
+      "family_history": ["乳腺癌"],
+      "symptoms": [],
+      "chronic_diseases": ["高血脂", "脂肪肝"],
+      "notes": "久坐办公，缺乏运动"
+    },
+    "预期结果": "中等风险"
+  },
+  
+  "场景6_有癌症史患者": {
+    "描述": "曾患癌症，已康复",
+    "数据": {
+      "age": 58,
+      "gender": "女",
+      "height": 162,
+      "weight": 58,
+      "smoking": 0,
+      "genetic_risk": 2,
+      "physical_activity": 3,
+      "alcohol_intake": 0,
+      "cancer_history": 1,
+      "family_history": ["乳腺癌", "卵巢癌"],
+      "symptoms": [],
+      "chronic_diseases": [],
+      "notes": "5年前确诊早期乳腺癌，已手术切除并康复"
+    },
+    "预期结果": "高风险"
+  },
+  
+  "场景7_健康老年人": {
+    "描述": "年龄大但生活方式健康",
+    "数据": {
+      "age": 70,
+      "gender": "男",
+      "height": 168,
+      "weight": 65,
+      "smoking": 0,
+      "genetic_risk": 0,
+      "physical_activity": 7,
+      "alcohol_intake": 0,
+      "cancer_history": 0,
+      "family_history": [],
+      "symptoms": [],
+      "chronic_diseases": [],
+      "notes": "坚持锻炼，饮食健康，定期体检"
+    },
+    "预期结果": "中低风险"
+  },
+  
+  "场景8_边界值测试_最小值": {
+    "描述": "测试最小合法值",
+    "数据": {
+      "age": 18,
+      "gender": "女",
+      "height": 150,
+      "weight": 40,
+      "smoking": 0,
+      "genetic_risk": 0,
+      "physical_activity": 0,
+      "alcohol_intake": 0,
+      "cancer_history": 0
+    },
+    "预期结果": "低风险"
+  },
+  
+  "场景9_边界值测试_最大值": {
+    "描述": "测试最大合法值",
+    "数据": {
+      "age": 90,
+      "gender": "男",
+      "height": 200,
+      "weight": 120,
+      "smoking": 1,
+      "genetic_risk": 2,
+      "physical_activity": 10,
+      "alcohol_intake": 10,
+      "cancer_history": 1,
+      "family_history": ["肺癌", "胃癌", "肝癌", "结肠癌"],
+      "symptoms": ["咳嗽", "胸痛", "体重下降", "食欲不振"],
+      "chronic_diseases": ["高血压", "糖尿病", "心脏病"]
+    },
+    "预期结果": "高风险"
+  },
+  
+  "=== V2.0 完整版测试数据 ===": {
+    "接口地址": "POST /api/v1/assessment/submit-v2",
+    "说明": "V2.0版本支持32个增强特征，包含更详细的问卷信息",
+    "新增字段类别": [
+      "环境与职业暴露（3项）",
+      "详细饮食习惯（5项）",
+      "女性特有因素（4项）",
+      "精神压力与作息（3项）",
+      "体检与筛查历史（2项）"
+    ]
+  },
+  
+  "V2_场景1_低风险年轻女性": {
+    "描述": "28岁健康女性，生活方式良好",
+    "数据": {
+      "age": 28,
+      "gender": "女",
+      "height": 165,
+      "weight": 55,
+      
+      "smoking_status": 0,
+      "smoking_years": null,
+      "smoking_amount": null,
+      "alcohol_frequency": "从不",
+      "alcohol_amount": null,
+      "exercise_hours_per_week": 5.0,
+      "exercise_intensity": "中",
+      "sleep_hours": 8,
+      "sleep_quality": "良好",
+      
+      "chronic_diseases": [],
+      "family_cancer_history": {
+        "has_history": false,
+        "relation": "",
+        "cancer_types": []
+      },
+      "personal_cancer_history": 0,
+      "surgery_history": [],
+      "medication_history": [],
+      
+      "occupational_exposure": {
+        "has_exposure": false,
+        "types": []
+      },
+      "environmental_factors": {
+        "air_quality": "良好",
+        "pollution_exposure": false
+      },
+      "living_environment": "城市",
+      
+      "vegetable_fruit_intake": "每天",
+      "red_meat_intake": "每周1-2次",
+      "processed_food_intake": "很少",
+      "pickled_food_intake": "很少",
+      "dairy_intake": "每天",
+      
+      "menstrual_status": "正常",
+      "pregnancy_history": {
+        "pregnancy_count": 0,
+        "first_pregnancy_age": null
+      },
+      "breastfeeding_history": {
+        "has_breastfed": false,
+        "total_months": 0
+      },
+      "hormone_therapy": {
+        "contraceptive_use": false,
+        "hrt_use": false,
+        "duration_years": 0
+      },
+      
+      "stress_level": "低",
+      "work_rest_pattern": "规律",
+      "mental_health": "良好",
+      
+      "screening_history": {
+        "last_checkup": "半年内",
+        "tumor_markers": false,
+        "imaging": false,
+        "endoscopy": false
+      },
+      "abnormal_results_history": [],
+      "last_checkup": "半年内",
+      
+      "symptoms": [],
+      "recent_abnormalities": [],
+      "notes": "健康生活，定期体检"
+    },
+    "预期结果": "低风险"
+  },
+  
+  "V2_场景2_中高风险中年女性": {
+    "描述": "45岁女性，有家族史，压力大，饮食习惯一般",
+    "数据": {
+      "age": 45,
+      "gender": "女",
+      "height": 165,
+      "weight": 68,
+      
+      "smoking_status": 0,
+      "alcohol_frequency": "偶尔",
+      "alcohol_amount": 1.0,
+      "exercise_hours_per_week": 2.0,
+      "exercise_intensity": "低",
+      "sleep_hours": 6,
+      "sleep_quality": "一般",
+      
+      "chronic_diseases": ["高血压", "高血脂"],
+      "family_cancer_history": {
+        "has_history": true,
+        "relation": "母亲",
+        "cancer_types": ["乳腺癌"]
+      },
+      "personal_cancer_history": 0,
+      "surgery_history": [],
+      "medication_history": ["降压药"],
+      
+      "occupational_exposure": {
+        "has_exposure": false,
+        "types": []
+      },
+      "environmental_factors": {
+        "air_quality": "一般",
+        "pollution_exposure": false
+      },
+      "living_environment": "城市",
+      
+      "vegetable_fruit_intake": "经常",
+      "red_meat_intake": "每周2-3次",
+      "processed_food_intake": "偶尔",
+      "pickled_food_intake": "偶尔",
+      "dairy_intake": "经常",
+      
+      "menstrual_status": "正常",
+      "pregnancy_history": {
+        "pregnancy_count": 2,
+        "first_pregnancy_age": 28
+      },
+      "breastfeeding_history": {
+        "has_breastfed": true,
+        "total_months": 12
+      },
+      "hormone_therapy": {
+        "contraceptive_use": true,
+        "hrt_use": false,
+        "duration_years": 10
+      },
+      
+      "stress_level": "高",
+      "work_rest_pattern": "不规律",
+      "mental_health": "焦虑",
+      
+      "screening_history": {
+        "last_checkup": "1年内",
+        "tumor_markers": true,
+        "imaging": false,
+        "endoscopy": false
+      },
+      "abnormal_results_history": [
+        {
+          "type": "乳腺结节",
+          "date": "2024-03",
+          "description": "BI-RADS 3类"
+        }
+      ],
+      "last_checkup": "1年内",
+      
+      "symptoms": ["乳房胀痛"],
+      "recent_abnormalities": ["乳腺结节"],
+      "notes": "母亲有乳腺癌病史，自己发现乳腺结节"
+    },
+    "预期结果": "中高风险"
+  },
+  
+  "V2_场景3_高风险老年男性": {
+    "描述": "65岁男性，长期吸烟，职业暴露，多重高危因素",
+    "数据": {
+      "age": 65,
+      "gender": "男",
+      "height": 172,
+      "weight": 85,
+      
+      "smoking_status": 2,
+      "smoking_years": 40,
+      "smoking_amount": 20,
+      "alcohol_frequency": "每天",
+      "alcohol_amount": 3.0,
+      "exercise_hours_per_week": 1.0,
+      "exercise_intensity": "低",
+      "sleep_hours": 6,
+      "sleep_quality": "差",
+      
+      "chronic_diseases": ["高血压", "糖尿病", "慢性支气管炎"],
+      "family_cancer_history": {
+        "has_history": true,
+        "relation": "父亲、兄弟",
+        "cancer_types": ["肺癌", "胃癌"]
+      },
+      "personal_cancer_history": 0,
+      "surgery_history": ["阑尾切除"],
+      "medication_history": ["降压药", "降糖药"],
+      
+      "occupational_exposure": {
+        "has_exposure": true,
+        "types": ["粉尘", "化学品"]
+      },
+      "environmental_factors": {
+        "air_quality": "差",
+        "pollution_exposure": true
+      },
+      "living_environment": "工业区",
+      
+      "vegetable_fruit_intake": "偶尔",
+      "red_meat_intake": "每天",
+      "processed_food_intake": "经常",
+      "pickled_food_intake": "经常",
+      "dairy_intake": "很少",
+      
+      "menstrual_status": null,
+      "pregnancy_history": null,
+      "breastfeeding_history": null,
+      "hormone_therapy": null,
+      
+      "stress_level": "高",
+      "work_rest_pattern": "经常熬夜",
+      "mental_health": "一般",
+      
+      "screening_history": {
+        "last_checkup": "3年以上",
+        "tumor_markers": false,
+        "imaging": true,
+        "endoscopy": false
+      },
+      "abnormal_results_history": [
+        {
+          "type": "肺部结节",
+          "date": "2023-05",
+          "description": "多发磨玻璃结节"
+        },
+        {
+          "type": "胃炎",
+          "date": "2022-08",
+          "description": "慢性萎缩性胃炎"
+        }
+      ],
+      "last_checkup": "3年以上",
+      
+      "symptoms": ["持续咳嗽", "痰中带血", "胸闷"],
+      "recent_abnormalities": ["肺部结节", "胃部不适"],
+      "notes": "煤矿工人，吸烟40年，父亲死于肺癌"
+    },
+    "预期结果": "高风险"
+  },
+  
+  "V2_场景4_中风险更年期女性": {
+    "描述": "52岁女性，已绝经，压力大，激素治疗史",
+    "数据": {
+      "age": 52,
+      "gender": "女",
+      "height": 160,
+      "weight": 62,
+      
+      "smoking_status": 0,
+      "alcohol_frequency": "偶尔",
+      "alcohol_amount": 0.5,
+      "exercise_hours_per_week": 3.0,
+      "exercise_intensity": "中",
+      "sleep_hours": 7,
+      "sleep_quality": "一般",
+      
+      "chronic_diseases": ["高血脂"],
+      "family_cancer_history": {
+        "has_history": true,
+        "relation": "姐姐",
+        "cancer_types": ["卵巢癌"]
+      },
+      "personal_cancer_history": 0,
+      "surgery_history": ["子宫肌瘤切除"],
+      "medication_history": ["激素替代疗法"],
+      
+      "occupational_exposure": {
+        "has_exposure": false,
+        "types": []
+      },
+      "environmental_factors": {
+        "air_quality": "良好",
+        "pollution_exposure": false
+      },
+      "living_environment": "城市",
+      
+      "vegetable_fruit_intake": "每天",
+      "red_meat_intake": "每周2-3次",
+      "processed_food_intake": "偶尔",
+      "pickled_food_intake": "很少",
+      "dairy_intake": "每天",
+      
+      "menstrual_status": "绝经",
+      "pregnancy_history": {
+        "pregnancy_count": 2,
+        "first_pregnancy_age": 26
+      },
+      "breastfeeding_history": {
+        "has_breastfed": true,
+        "total_months": 18
+      },
+      "hormone_therapy": {
+        "contraceptive_use": true,
+        "hrt_use": true,
+        "duration_years": 15
+      },
+      
+      "stress_level": "中",
+      "work_rest_pattern": "规律",
+      "mental_health": "焦虑",
+      
+      "screening_history": {
+        "last_checkup": "1年内",
+        "tumor_markers": true,
+        "imaging": true,
+        "endoscopy": false
+      },
+      "abnormal_results_history": [],
+      "last_checkup": "1年内",
+      
+      "symptoms": ["潮热", "失眠"],
+      "recent_abnormalities": [],
+      "notes": "更年期症状，正在接受激素替代治疗"
+    },
+    "预期结果": "中等风险"
+  },
+  
+  "V2_场景5_高风险化工厂工人": {
+    "描述": "50岁男性，化工厂工作，长期接触有害物质",
+    "数据": {
+      "age": 50,
+      "gender": "男",
+      "height": 175,
+      "weight": 78,
+      
+      "smoking_status": 1,
+      "smoking_years": 25,
+      "smoking_amount": 15,
+      "alcohol_frequency": "经常",
+      "alcohol_amount": 2.5,
+      "exercise_hours_per_week": 2.0,
+      "exercise_intensity": "低",
+      "sleep_hours": 7,
+      "sleep_quality": "一般",
+      
+      "chronic_diseases": ["慢性鼻炎"],
+      "family_cancer_history": {
+        "has_history": false,
+        "relation": "",
+        "cancer_types": []
+      },
+      "personal_cancer_history": 0,
+      "surgery_history": [],
+      "medication_history": [],
+      
+      "occupational_exposure": {
+        "has_exposure": true,
+        "types": ["化学品", "有机溶剂", "粉尘", "辐射"]
+      },
+      "environmental_factors": {
+        "air_quality": "差",
+        "pollution_exposure": true
+      },
+      "living_environment": "工业区",
+      
+      "vegetable_fruit_intake": "偶尔",
+      "red_meat_intake": "每天",
+      "processed_food_intake": "经常",
+      "pickled_food_intake": "经常",
+      "dairy_intake": "偶尔",
+      
+      "menstrual_status": null,
+      "pregnancy_history": null,
+      "breastfeeding_history": null,
+      "hormone_therapy": null,
+      
+      "stress_level": "高",
+      "work_rest_pattern": "不规律",
+      "mental_health": "一般",
+      
+      "screening_history": {
+        "last_checkup": "1-3年",
+        "tumor_markers": false,
+        "imaging": false,
+        "endoscopy": false
+      },
+      "abnormal_results_history": [],
+      "last_checkup": "1-3年",
+      
+      "symptoms": ["经常咳嗽", "鼻塞"],
+      "recent_abnormalities": [],
+      "notes": "化工厂工作20年，长期接触苯、甲醛等化学物质"
+    },
+    "预期结果": "高风险"
+  }
+}

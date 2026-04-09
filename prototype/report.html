@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>风险评估报告 - 肿瘤数智化筛查系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .report-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+        
+        .report-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .report-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .risk-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .risk-low { background: #f6ffed; color: #52c41a; border: 2px solid #52c41a; }
+        .risk-medium { background: #fffbe6; color: #faad14; border: 2px solid #faad14; }
+        .risk-high { background: #fff2e8; color: #fa8c16; border: 2px solid #fa8c16; }
+        .risk-critical { background: #fff1f0; color: #f5222d; border: 2px solid #f5222d; }
+        
+        .score-display {
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .score-number {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .score-label {
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .factor-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .factor-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .factor-increase {
+            background: #fff1f0;
+            color: #f5222d;
+        }
+        
+        .factor-decrease {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+        
+        .recommendation-card {
+            border-left: 4px solid #1890ff;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .recommendation-card h6 {
+            color: #1890ff;
+            margin-bottom: 10px;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .test-table {
+            width: 100%;
+        }
+        
+        .test-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .test-table td, .test-table th {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-heart-pulse-fill text-danger"></i>
+                <strong>肿瘤数智化筛查系统</strong>
+            </a>
+            <div class="ms-auto">
+                <a href="history.html" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-clock-history"></i> 历史记录
+                </a>
+                <a href="questionnaire.html" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> 新建筛查
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="report-container" id="reportContent">
+        <!-- 报告头部 -->
+        <div class="report-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-file-earmark-medical"></i> 肿瘤风险评估报告</h2>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-calendar3"></i> 评估时间：<span id="reportDate"></span> &nbsp;|&nbsp;
+                        <i class="bi bi-hash"></i> 报告编号：<span id="reportId"></span>
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="window.print()">
+                        <i class="bi bi-printer"></i> 打印
+                    </button>
+                    <button class="btn btn-primary" onclick="exportPDF()">
+                        <i class="bi bi-download"></i> 导出PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. 风险总览 -->
+        <div class="report-card">
+            <h4 class="mb-4"><i class="bi bi-speedometer2"></i> 综合风险评估</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="gaugeChart" class="chart-container"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="score-display">
+                        <div class="score-number" id="scoreNumber" style="color: #fa8c16;">68</div>
+                        <div class="score-label">风险评分（0-100）</div>
+                        <div class="mt-4">
+                            <span class="risk-badge risk-high" id="riskLevel">高风险</span>
+                        </div>
+                        <p class="mt-4 text-muted">
+                            您的风险评分为 <strong>68分</strong>，属于高风险人群。<br>
+                            这意味着您比 <strong>82%</strong> 的同龄人风险更高。
+                        </p>
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>建议：</strong>建议尽快到医院进行全面体检，咨询专业医生。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 关键风险因素 -->
+        <div class="report-card">
+            <h4 class="mb-4"><i class="bi bi-graph-up-arrow"></i> 关键风险因素分析</h4>
+            <p class="text-muted">以下因素对您的风险评分有显著影响：</p>
+            
+            <div class="factor-item">
+                <div class="factor-icon factor-increase">
+                    <i class="bi bi-arrow-up"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong>吸烟史（20年）</strong>
+                    <p class="mb-0 text-muted">长期吸烟显著增加肺癌风险</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-danger">+15分</span>
+                </div>
+            </div>
+            
+            <div class="factor-item">
+                <div class="factor-icon factor-increase">
+                    <i class="bi bi-arrow-up"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong>家族肿瘤史</strong>
+                    <p class="mb-0 text-muted">直系亲属有肺癌病史</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-danger">+8分</span>
+                </div>
+            </div>
+            
+            <div class="factor-item">
+                <div class="factor-icon factor-increase">
+                    <i class="bi bi-arrow-up"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong>年龄因素（55岁）</strong>
+                    <p class="mb-0 text-muted">50岁以上属于肿瘤高发年龄段</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-warning">+7分</span>
+                </div>
+            </div>
+            
+            <div class="factor-item">
+                <div class="factor-icon factor-decrease">
+                    <i class="bi bi-arrow-down"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong>定期运动</strong>
+                    <p class="mb-0 text-muted">每周运动3次以上</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-success">-3分</span>
+                </div>
+            </div>
+            
+            <div class="factor-item">
+                <div class="factor-icon factor-decrease">
+                    <i class="bi bi-arrow-down"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong>饮食均衡</strong>
+                    <p class="mb-0 text-muted">保持健康的饮食习惯</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-success">-2分</span>
+                </div>
+            </div>
+            
+            <div id="waterfallChart" class="chart-container mt-4"></div>
+        </div>
+
+        <!-- 3. 分类风险 -->
+        <div class="report-card">
+            <h4 class="mb-4"><i class="bi bi-radar"></i> 各类肿瘤风险细分</h4>
+            <div id="radarChart" class="chart-container"></div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="alert alert-danger">
+                        <strong>肺癌风险：75分（高风险）</strong><br>
+                        主要影响因素：吸烟史、年龄
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-danger">
+                        <strong>肝癌风险：60分（高风险）</strong><br>
+                        主要影响因素：饮酒、家族史
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning">
+                        <strong>结直肠癌风险：50分（中风险）</strong><br>
+                        主要影响因素：年龄、饮食习惯
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning">
+                        <strong>胃癌风险：45分（中风险）</strong><br>
+                        主要影响因素：饮食习惯
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 健康建议 -->
+        <div class="report-card">
+            <h4 class="mb-4"><i class="bi bi-lightbulb"></i> 个性化健康建议</h4>
+            
+            <div class="recommendation-card">
+                <h6><i class="bi bi-1-circle"></i> 立即戒烟</h6>
+                <p class="mb-0">吸烟是肺癌的首要危险因素，戒烟可显著降低风险。建议：</p>
+                <ul class="mb-0">
+                    <li>寻求专业戒烟指导</li>
+                    <li>使用戒烟辅助药物（如尼古丁替代疗法）</li>
+                    <li>避免吸烟触发场景</li>
+                </ul>
+            </div>
+            
+            <div class="recommendation-card">
+                <h6><i class="bi bi-2-circle"></i> 控制饮酒</h6>
+                <p class="mb-0">长期饮酒增加肝癌、食管癌风险。建议：</p>
+                <ul class="mb-0">
+                    <li>男性每日饮酒不超过25g（约半斤低度白酒）</li>
+                    <li>女性每日饮酒不超过15g</li>
+                    <li>最好戒酒或仅偶尔少量饮酒</li>
+                </ul>
+            </div>
+            
+            <div class="recommendation-card">
+                <h6><i class="bi bi-3-circle"></i> 保持运动习惯</h6>
+                <p class="mb-0">您目前的运动习惯很好，请继续保持。建议：</p>
+                <ul class="mb-0">
+                    <li>每周至少150分钟中等强度有氧运动</li>
+                    <li>每周2次力量训练</li>
+                    <li>避免久坐，每小时起身活动</li>
+                </ul>
+            </div>
+            
+            <div class="recommendation-card">
+                <h6><i class="bi bi-4-circle"></i> 改善饮食结构</h6>
+                <p class="mb-0">建议调整饮食习惯，降低肿瘤风险：</p>
+                <ul class="mb-0">
+                    <li>减少腌制、熏制食品摄入</li>
+                    <li>增加新鲜蔬菜水果（每天5种以上）</li>
+                    <li>控制红肉摄入，增加鱼类和豆类</li>
+                    <li>保持低盐低脂饮食</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 5. 推荐检查 -->
+        <div class="report-card">
+            <h4 class="mb-4"><i class="bi bi-hospital"></i> 推荐医学检查</h4>
+            <p class="text-muted mb-4">根据您的风险评估结果，建议进行以下检查：</p>
+            
+            <table class="test-table">
+                <thead>
+                    <tr>
+                        <th>检查项目</th>
+                        <th>推荐频率</th>
+                        <th>费用估算</th>
+                        <th>适用说明</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>低剂量螺旋CT</strong></td>
+                        <td>每年1次</td>
+                        <td>300-500元</td>
+                        <td>用于肺癌早期筛查，推荐长期吸烟者</td>
+                    </tr>
+                    <tr>
+                        <td><strong>胃镜检查</strong></td>
+                        <td>每2年1次</td>
+                        <td>500-800元</td>
+                        <td>胃癌筛查，有家族史者建议提前</td>
+                    </tr>
+                    <tr>
+                        <td><strong>肝功能+AFP+B超</strong></td>
+                        <td>每6个月1次</td>
+                        <td>200-400元</td>
+                        <td>肝癌筛查，有肝炎史者必查</td>
+                    </tr>
+                    <tr>
+                        <td><strong>肠镜检查</strong></td>
+                        <td>每3-5年1次</td>
+                        <td>800-1200元</td>
+                        <td>结直肠癌筛查，50岁以上推荐</td>
+                    </tr>
+                    <tr>
+                        <td><strong>肿瘤标志物检测</strong></td>
+                        <td>每年1次</td>
+                        <td>200-400元</td>
+                        <td>多项肿瘤标志物联合检测</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="alert alert-info mt-4">
+                <i class="bi bi-info-circle"></i>
+                <strong>重要提示：</strong>
+                <ul class="mb-0 mt-2">
+                    <li>以上检查建议仅供参考，具体检查方案请咨询专业医生</li>
+                    <li>定期体检是早期发现肿瘤的关键</li>
+                    <li>如有不适症状，请立即就医，不要等待定期检查</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 免责声明 -->
+        <div class="report-card">
+            <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> 免责声明</h6>
+            <p class="text-muted small mb-0">
+                本报告基于人工智能算法生成，仅供健康风险评估参考，不构成医疗诊断。
+                评估结果受输入数据准确性影响，建议定期更新。
+                如有健康疑问或不适症状，请及时就医咨询专业医生。
+                本系统不对因使用本报告而产生的任何后果承担责任。
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 初始化页面数据
+        document.getElementById('reportDate').textContent = new Date().toLocaleDateString('zh-CN');
+        document.getElementById('reportId').textContent = 'REP-' + new Date().toISOString().slice(0,10).replace(/-/g, '') + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+        // 1. 风险仪表盘
+        const gaugeChart = echarts.init(document.getElementById('gaugeChart'));
+        const gaugeOption = {
+            series: [{
+                type: 'gauge',
+                startAngle: 180,
+                endAngle: 0,
+                min: 0,
+                max: 100,
+                splitNumber: 4,
+                axisLine: {
+                    lineStyle: {
+                        width: 30,
+                        color: [
+                            [0.4, '#52c41a'],
+                            [0.6, '#faad14'],
+                            [0.8, '#fa8c16'],
+                            [1, '#f5222d']
+                        ]
+                    }
+                },
+                pointer: {
+                    itemStyle: {
+                        color: 'auto'
+                    }
+                },
+                axisTick: {
+                    distance: -30,
+                    length: 8,
+                    lineStyle: {
+                        color: '#fff',
+                        width: 2
+                    }
+                },
+                splitLine: {
+                    distance: -30,
+                    length: 30,
+                    lineStyle: {
+                        color: '#fff',
+                        width: 4
+                    }
+                },
+                axisLabel: {
+                    color: 'auto',
+                    distance: 40,
+                    fontSize: 14
+                },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}',
+                    color: 'auto',
+                    fontSize: 40,
+                    offsetCenter: [0, '70%']
+                },
+                data: [{
+                    value: 68,
+                    name: '风险评分'
+                }]
+            }]
+        };
+        gaugeChart.setOption(gaugeOption);
+
+        // 2. SHAP瀑布图
+        const waterfallChart = echarts.init(document.getElementById('waterfallChart'));
+        const waterfallOption = {
+            title: {
+                text: 'SHAP特征贡献度分析',
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '15%',
+                right: '10%',
+                bottom: '10%'
+            },
+            xAxis: {
+                type: 'value',
+                name: '分数贡献'
+            },
+            yAxis: {
+                type: 'category',
+                data: ['饮食均衡', '定期运动', '年龄', '家族史', '吸烟史']
+            },
+            series: [{
+                name: '贡献度',
+                type: 'bar',
+                data: [
+                    {value: -2, itemStyle: {color: '#52c41a'}},
+                    {value: -3, itemStyle: {color: '#52c41a'}},
+                    {value: 7, itemStyle: {color: '#fa8c16'}},
+                    {value: 8, itemStyle: {color: '#f5222d'}},
+                    {value: 15, itemStyle: {color: '#f5222d'}}
+                ],
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{c}分'
+                }
+            }]
+        };
+        waterfallChart.setOption(waterfallOption);
+
+        // 3. 雷达图
+        const radarChart = echarts.init(document.getElementById('radarChart'));
+        const radarOption = {
+            title: {
+                text: '各类肿瘤风险分布',
+                left: 'center'
+            },
+            tooltip: {},
+            legend: {
+                data: ['您的风险', '平均风险'],
+                bottom: 0
+            },
+            radar: {
+                indicator: [
+                    { name: '肺癌', max: 100 },
+                    { name: '胃癌', max: 100 },
+                    { name: '肝癌', max: 100 },
+                    { name: '结直肠癌', max: 100 },
+                    { name: '乳腺癌', max: 100 },
+                    { name: '食管癌', max: 100 }
+                ]
+            },
+            series: [{
+                name: '风险对比',
+                type: 'radar',
+                data: [
+                    {
+                        value: [75, 45, 60, 50, 30, 40],
+                        name: '您的风险',
+                        itemStyle: { color: '#f5222d' },
+                        areaStyle: { opacity: 0.3 }
+                    },
+                    {
+                        value: [35, 35, 35, 35, 35, 35],
+                        name: '平均风险',
+                        itemStyle: { color: '#1890ff' },
+                        areaStyle: { opacity: 0.1 }
+                    }
+                ]
+            }]
+        };
+        radarChart.setOption(radarOption);
+
+        // 响应式调整
+        window.addEventListener('resize', () => {
+            gaugeChart.resize();
+            waterfallChart.resize();
+            radarChart.resize();
+        });
+
+        // 导出PDF功能
+        function exportPDF() {
+            alert('PDF导出功能演示\n\n实际项目中使用 html2canvas + jsPDF 实现');
+        }
+    </script>
+</body>
+</html>
+

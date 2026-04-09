@@ -1,0 +1,19 @@
+{
+  "timestamp": "20251027_163854",
+  "model_version": "v2.0_enhanced",
+  "datasets_used": [
+    "WDBC",
+    "SEER",
+    "Cancer_1500"
+  ],
+  "total_samples": 6093,
+  "total_features": 32,
+  "performance": {
+    "accuracy": 0.8121410992616899,
+    "precision": 0.8076923076923077,
+    "recall": 0.9315589353612167,
+    "f1": 0.8652148322542673,
+    "auc": 0.8014265923895423
+  },
+  "notes": "整合多数据集，适配新questionnaires表结构"
+}

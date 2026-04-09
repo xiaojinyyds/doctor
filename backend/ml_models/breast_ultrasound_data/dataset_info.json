@@ -1,0 +1,18 @@
+{
+  "total": 780,
+  "train": {
+    "normal": 93,
+    "benign": 305,
+    "malignant": 146
+  },
+  "val": {
+    "normal": 20,
+    "benign": 66,
+    "malignant": 32
+  },
+  "test": {
+    "normal": 20,
+    "benign": 66,
+    "malignant": 32
+  }
+}

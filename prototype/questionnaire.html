@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康问卷 - 肿瘤数智化筛查系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .questionnaire-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 15px;
+        }
+        
+        .questionnaire-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .questionnaire-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .questionnaire-header h2 {
+            font-weight: 700;
+            color: #1890ff;
+            margin-bottom: 10px;
+        }
+        
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+        
+        .progress-line {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            height: 2px;
+            background: #1890ff;
+            transition: width 0.3s;
+            z-index: 1;
+        }
+        
+        .step-item {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #e0e0e0;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .step-item.active .step-circle {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        
+        .step-item.completed .step-circle {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+        
+        .step-title {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .step-item.active .step-title {
+            color: #1890ff;
+            font-weight: 600;
+        }
+        
+        .form-section {
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 0.2rem rgba(24, 144, 255, 0.25);
+        }
+        
+        .btn-action {
+            min-width: 120px;
+        }
+        
+        .info-box {
+            background: #e6f7ff;
+            border-left: 3px solid #1890ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .warning-box {
+            background: #fff7e6;
+            border-left: 3px solid #faad14;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .sub-question {
+            margin-left: 20px;
+            margin-top: 15px;
+            padding-left: 20px;
+            border-left: 2px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="questionnaire-container">
+        <div class="questionnaire-card">
+            <div class="questionnaire-header">
+                <h2><i class="bi bi-clipboard2-pulse"></i> 健康问卷</h2>
+                <p class="text-muted">请认真填写以下信息，我们将为您提供专业的风险评估</p>
+            </div>
+            
+            <!-- 步骤进度 -->
+            <div class="progress-steps">
+                <div class="progress-line" id="progressLine"></div>
+                <div class="step-item active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-title">基本信息</div>
+                </div>
+                <div class="step-item" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-title">生活习惯</div>
+                </div>
+                <div class="step-item" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-title">疾病史</div>
+                </div>
+                <div class="step-item" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-title">症状自查</div>
+                </div>
+            </div>
+            
+            <form id="questionnaireForm">
+                <!-- 第1步：基本信息 -->
+                <div class="form-section active" data-step="1">
+                    <h5 class="mb-4"><i class="bi bi-person-badge"></i> 基本信息</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">姓名（可选）</label>
+                            <input type="text" class="form-control" name="name" placeholder="用于报告个性化">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">年龄 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="age" min="18" max="120" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">性别 <span class="text-danger">*</span></label>
+                            <select class="form-select" name="gender" required>
+                                <option value="">请选择</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">职业</label>
+                            <select class="form-select" name="occupation">
+                                <option value="">请选择</option>
+                                <option value="企业职员">企业职员</option>
+                                <option value="公务员">公务员</option>
+                                <option value="教师">教师</option>
+                                <option value="医务人员">医务人员</option>
+                                <option value="个体经营">个体经营</option>
+                                <option value="学生">学生</option>
+                                <option value="退休">退休</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">身高（cm）<span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="height" min="100" max="250" 
+                                   placeholder="例如：175" required id="height">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">体重（kg）<span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="weight" min="30" max="200" 
+                                   placeholder="例如：70" required id="weight">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">BMI指数</label>
+                            <input type="text" class="form-control" id="bmi" readonly placeholder="自动计算">
+                            <small class="text-muted">正常范围：18.5-24.0</small>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <i class="bi bi-info-circle text-primary"></i>
+                        <strong>提示：</strong>请如实填写您的基本信息，这将影响评估结果的准确性。
+                    </div>
+                </div>
+                
+                <!-- 第2步：生活习惯 -->
+                <div class="form-section" data-step="2">
+                    <h5 class="mb-4"><i class="bi bi-heart"></i> 生活习惯</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">吸烟史 <span class="text-danger">*</span></label>
+                        <select class="form-select" name="smoking" id="smoking" required>
+                            <option value="">请选择</option>
+                            <option value="从不吸烟">从不吸烟</option>
+                            <option value="已戒烟">已戒烟</option>
+                            <option value="偶尔吸烟">偶尔吸烟（每周<3支）</option>
+                            <option value="每天吸烟">每天吸烟</option>
+                        </select>
+                        
+                        <div class="sub-question" id="smokingDetails" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">每日吸烟量（支）</label>
+                                    <input type="number" class="form-control" name="smoking_amount" min="0" max="100">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">吸烟年限（年）</label>
+                                    <input type="number" class="form-control" name="smoking_years" min="0" max="80">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">饮酒频率 <span class="text-danger">*</span></label>
+                        <select class="form-select" name="alcohol" required>
+                            <option value="">请选择</option>
+                            <option value="从不饮酒">从不饮酒</option>
+                            <option value="偶尔饮酒">偶尔饮酒（社交场合）</option>
+                            <option value="每周饮酒">每周饮酒（1-3次）</option>
+                            <option value="每天饮酒">每天饮酒</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">运动习惯 <span class="text-danger">*</span></label>
+                        <select class="form-select" name="exercise" required>
+                            <option value="">请选择</option>
+                            <option value="几乎不运动">几乎不运动</option>
+                            <option value="偶尔运动">偶尔运动（每月1-2次）</option>
+                            <option value="每周运动1-2次">每周运动1-2次</option>
+                            <option value="每周运动3次以上">每周运动3次以上</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">饮食习惯（可多选）</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="diet" value="腌制食品" id="diet1">
+                            <label class="form-check-label" for="diet1">经常吃腌制食品</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="diet" value="油炸食品" id="diet2">
+                            <label class="form-check-label" for="diet2">偏好油炸食品</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="diet" value="烧烤" id="diet3">
+                            <label class="form-check-label" for="diet3">爱吃烧烤</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="diet" value="高盐" id="diet4">
+                            <label class="form-check-label" for="diet4">高盐饮食</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="diet" value="均衡" id="diet5">
+                            <label class="form-check-label" for="diet5">饮食均衡</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">睡眠质量 <span class="text-danger">*</span></label>
+                        <select class="form-select" name="sleep" required>
+                            <option value="">请选择</option>
+                            <option value="良好">良好（每天7-8小时）</option>
+                            <option value="一般">一般（6-7小时或8-9小时）</option>
+                            <option value="较差">较差（<6小时或>9小时）</option>
+                            <option value="失眠">失眠</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 第3步：疾病史 -->
+                <div class="form-section" data-step="3">
+                    <h5 class="mb-4"><i class="bi bi-file-medical"></i> 疾病史与家族史</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">慢性病史（可多选）</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="chronic" value="高血压" id="chronic1">
+                            <label class="form-check-label" for="chronic1">高血压</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="chronic" value="糖尿病" id="chronic2">
+                            <label class="form-check-label" for="chronic2">糖尿病</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="chronic" value="冠心病" id="chronic3">
+                            <label class="form-check-label" for="chronic3">冠心病</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="chronic" value="慢性肝炎" id="chronic4">
+                            <label class="form-check-label" for="chronic4">慢性肝炎（乙肝/丙肝）</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="chronic" value="慢性胃炎" id="chronic5">
+                            <label class="form-check-label" for="chronic5">慢性胃炎/胃溃疡</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="chronic" value="无" id="chronic6">
+                            <label class="form-check-label" for="chronic6">无</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">家族肿瘤史（可多选）<span class="text-danger">*</span></label>
+                        <div class="alert alert-info">
+                            <small><i class="bi bi-info-circle"></i> 请选择直系亲属（父母、兄弟姐妹、祖父母、外祖父母）患过的肿瘤</small>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="family" value="肺癌" id="family1">
+                            <label class="form-check-label" for="family1">肺癌</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="family" value="胃癌" id="family2">
+                            <label class="form-check-label" for="family2">胃癌</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="family" value="肝癌" id="family3">
+                            <label class="form-check-label" for="family3">肝癌</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="family" value="结直肠癌" id="family4">
+                            <label class="form-check-label" for="family4">结直肠癌</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="family" value="乳腺癌" id="family5">
+                            <label class="form-check-label" for="family5">乳腺癌</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="family" value="食管癌" id="family6">
+                            <label class="form-check-label" for="family6">食管癌</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="family" value="无" id="family7" checked>
+                            <label class="form-check-label" for="family7">无家族肿瘤史</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">上次体检时间</label>
+                        <select class="form-select" name="last_checkup">
+                            <option value="">请选择</option>
+                            <option value="3个月内">3个月内</option>
+                            <option value="3-6个月">3-6个月</option>
+                            <option value="6-12个月">6-12个月</option>
+                            <option value="1年以上">1年以上</option>
+                            <option value="从未体检">从未体检</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 第4步：症状自查 -->
+                <div class="form-section" data-step="4">
+                    <h5 class="mb-4"><i class="bi bi-activity"></i> 症状自查</h5>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>重要提示：</strong>以下症状请根据近3个月的实际情况如实填写
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">近期出现的症状（可多选）</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="持续咳嗽" id="symptom1">
+                            <label class="form-check-label" for="symptom1">持续咳嗽（>2周）</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="咯血" id="symptom2">
+                            <label class="form-check-label text-danger" for="symptom2">咯血 ⚠️</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="胸痛胸闷" id="symptom3">
+                            <label class="form-check-label" for="symptom3">胸痛/胸闷</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="体重下降" id="symptom4">
+                            <label class="form-check-label" for="symptom4">不明原因体重下降（>5kg/月）</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="持续乏力" id="symptom5">
+                            <label class="form-check-label" for="symptom5">持续乏力</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="不明原因发热" id="symptom6">
+                            <label class="form-check-label" for="symptom6">不明原因发热</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="吞咽困难" id="symptom7">
+                            <label class="form-check-label" for="symptom7">吞咽困难</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="声音嘶哑" id="symptom8">
+                            <label class="form-check-label" for="symptom8">声音嘶哑</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="淋巴结肿大" id="symptom9">
+                            <label class="form-check-label" for="symptom9">淋巴结肿大</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="皮肤黄疸" id="symptom10">
+                            <label class="form-check-label" for="symptom10">皮肤黄疸</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="大便带血" id="symptom11">
+                            <label class="form-check-label text-danger" for="symptom11">大便带血/黑便 ⚠️</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="腹痛腹胀" id="symptom12">
+                            <label class="form-check-label" for="symptom12">腹痛/腹胀</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="乳房肿块" id="symptom13">
+                            <label class="form-check-label text-danger" for="symptom13">乳房肿块 ⚠️</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="无症状" id="symptom14" checked>
+                            <label class="form-check-label" for="symptom14">无症状</label>
+                        </div>
+                    </div>
+                    
+                    <div class="warning-box" id="highRiskWarning" style="display: none;">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        <strong>警告：</strong>您选择的症状可能提示较高风险，建议尽快到医院就诊！
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">既往检查异常（可多选）</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="abnormal" value="肺部结节" id="abnormal1">
+                            <label class="form-check-label" for="abnormal1">肺部结节</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="abnormal" value="肝脏结节" id="abnormal2">
+                            <label class="form-check-label" for="abnormal2">肝脏结节</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="abnormal" value="胃肠息肉" id="abnormal3">
+                            <label class="form-check-label" for="abnormal3">胃肠息肉</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="abnormal" value="甲状腺结节" id="abnormal4">
+                            <label class="form-check-label" for="abnormal4">甲状腺结节</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="abnormal" value="乳腺结节" id="abnormal5">
+                            <label class="form-check-label" for="abnormal5">乳腺结节</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="abnormal" value="无" id="abnormal6" checked>
+                            <label class="form-check-label" for="abnormal6">无异常</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 按钮组 -->
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary btn-action" id="prevBtn" style="display: none;">
+                        <i class="bi bi-arrow-left"></i> 上一步
+                    </button>
+                    <div></div>
+                    <button type="button" class="btn btn-primary btn-action" id="nextBtn">
+                        下一步 <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <button type="submit" class="btn btn-success btn-action" id="submitBtn" style="display: none;">
+                        <i class="bi bi-send"></i> 提交评估
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 草稿提示 -->
+        <div class="text-center text-muted">
+            <small><i class="bi bi-save"></i> 系统会自动保存您的填写进度</small>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        // 计算BMI
+        document.getElementById('height').addEventListener('input', calculateBMI);
+        document.getElementById('weight').addEventListener('input', calculateBMI);
+        
+        function calculateBMI() {
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            
+            if (height && weight) {
+                const bmi = (weight / Math.pow(height / 100, 2)).toFixed(1);
+                document.getElementById('bmi').value = bmi;
+                
+                // BMI提示
+                let hint = '';
+                if (bmi < 18.5) hint = '偏瘦';
+                else if (bmi < 24) hint = '正常';
+                else if (bmi < 28) hint = '超重';
+                else hint = '肥胖';
+                
+                document.getElementById('bmi').value = bmi + ' (' + hint + ')';
+            }
+        }
+        
+        // 吸烟详情显示
+        document.getElementById('smoking').addEventListener('change', function() {
+            const details = document.getElementById('smokingDetails');
+            if (this.value === '每天吸烟' || this.value === '已戒烟') {
+                details.style.display = 'block';
+            } else {
+                details.style.display = 'none';
+            }
+        });
+        
+        // 高危症状警告
+        document.querySelectorAll('input[name="symptoms"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const highRiskSymptoms = ['咯血', '大便带血', '乳房肿块'];
+                const selectedSymptoms = Array.from(document.querySelectorAll('input[name="symptoms"]:checked'))
+                    .map(cb => cb.value);
+                
+                const hasHighRisk = selectedSymptoms.some(s => highRiskSymptoms.includes(s));
+                document.getElementById('highRiskWarning').style.display = hasHighRisk ? 'block' : 'none';
+            });
+        });
+        
+        // 步骤导航
+        function updateStepUI() {
+            // 更新步骤指示器
+            document.querySelectorAll('.step-item').forEach((item, index) => {
+                const step = index + 1;
+                if (step < currentStep) {
+                    item.classList.add('completed');
+                    item.classList.remove('active');
+                } else if (step === currentStep) {
+                    item.classList.add('active');
+                    item.classList.remove('completed');
+                } else {
+                    item.classList.remove('active', 'completed');
+                }
+            });
+            
+            // 更新进度条
+            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progressLine').style.width = progress + '%';
+            
+            // 显示/隐藏表单部分
+            document.querySelectorAll('.form-section').forEach((section, index) => {
+                if (index + 1 === currentStep) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+            
+            // 更新按钮
+            document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+            document.getElementById('nextBtn').style.display = currentStep < totalSteps ? 'block' : 'none';
+            document.getElementById('submitBtn').style.display = currentStep === totalSteps ? 'block' : 'none';
+            
+            // 保存进度
+            saveProgress();
+        }
+        
+        // 保存进度到localStorage
+        function saveProgress() {
+            const formData = new FormData(document.getElementById('questionnaireForm'));
+            const data = Object.fromEntries(formData);
+            data.currentStep = currentStep;
+            localStorage.setItem('questionnaire_draft', JSON.stringify(data));
+        }
+        
+        // 恢复进度
+        function restoreProgress() {
+            const saved = localStorage.getItem('questionnaire_draft');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (confirm('检测到未完成的问卷，是否继续填写？')) {
+                    // 恢复表单数据
+                    Object.keys(data).forEach(key => {
+                        const input = document.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                input.checked = true;
+                            } else {
+                                input.value = data[key];
+                            }
+                        }
+                    });
+                    
+                    currentStep = data.currentStep || 1;
+                    updateStepUI();
+                } else {
+                    localStorage.removeItem('questionnaire_draft');
+                }
+            }
+        }
+        
+        // 下一步
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            // 验证当前步骤
+            const currentSection = document.querySelector(`.form-section[data-step="${currentStep}"]`);
+            const requiredInputs = currentSection.querySelectorAll('[required]');
+            let valid = true;
+            
+            requiredInputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    valid = false;
+                }
+            });
+            
+            if (valid && currentStep < totalSteps) {
+                currentStep++;
+                updateStepUI();
+                window.scrollTo(0, 0);
+            }
+        });
+        
+        // 上一步
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+                window.scrollTo(0, 0);
+            }
+        });
+        
+        // 提交表单
+        document.getElementById('questionnaireForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 显示加载提示
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> 评估中...';
+            submitBtn.disabled = true;
+            
+            // 模拟提交
+            setTimeout(() => {
+                // 清除草稿
+                localStorage.removeItem('questionnaire_draft');
+                
+                // 保存评估ID
+                const assessmentId = 'demo_' + Date.now();
+                localStorage.setItem('current_assessment', assessmentId);
+                
+                // 跳转到报告页
+                window.location.href = 'report.html?id=' + assessmentId;
+            }, 2000);
+        });
+        
+        // 页面加载时恢复进度
+        window.addEventListener('load', restoreProgress);
+    </script>
+</body>
+</html>
+
