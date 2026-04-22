@@ -53,14 +53,19 @@ class Settings(BaseSettings):
     # 服务器地址配置
     BACKEND_URL: str = Field(default="http://localhost:8000", description="后端服务器地址")
     FRONTEND_URL: str = Field(default="http://localhost:3000", description="前端服务器地址")
+    DEFAULT_TENANT_ID: str = Field(default="tenant-default", description="默认租户ID")
+    DEFAULT_TENANT_NAME: str = Field(default="默认机构", description="默认租户名称")
     
     @property
     def get_allowed_origins(self) -> List[str]:
         """获取CORS允许的源列表"""
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
     
-    # 智谱AI配置（GLM-4.6大模型）
+    # 大模型配置
     ZHIPU_API_KEY: str = Field(default="", description="智谱AI API密钥")
+    DEEPSEEK_API_KEY: str = Field(default="", description="DeepSeek API密钥")
+    DEEPSEEK_BASE_URL: str = Field(default="https://api.deepseek.com", description="DeepSeek API地址")
+    DEEPSEEK_MODEL: str = Field(default="deepseek-chat", description="DeepSeek模型名称")
     
     # 阿里云OSS配置
     OSS_ENDPOINT: str = Field(default="oss-cn-shanghai.aliyuncs.com", description="OSS接入点")
@@ -85,4 +90,3 @@ class Settings(BaseSettings):
 
 # 全局配置实例
 settings = Settings()
-

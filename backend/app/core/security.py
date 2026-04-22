@@ -114,7 +114,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     
     return CurrentUser(
         user_id=payload["sub"],
-        tenant_id=payload.get("tenant_id", "tenant-default"),  # 兼容旧Token
+        tenant_id=payload.get("tenant_id", settings.DEFAULT_TENANT_ID),  # 兼容旧Token
         role=payload.get("role", "user")  # 兼容旧Token
     )
 

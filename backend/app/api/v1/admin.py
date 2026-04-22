@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 from app.core.database import get_db
-from app.core.security import get_password_hash, require_admin
+from app.core.security import CurrentUser, get_password_hash, require_admin
 from app.models.user import User, UserRole, UserStatus
 from app.models.assessment import Assessment
 from app.models.questionnaire import Questionnaire
@@ -42,7 +42,7 @@ async def get_users(
     keyword: Optional[str] = Query(None, description="搜索关键词（邮箱/手机/昵称）"),
     role: Optional[str] = Query(None, description="角色筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -98,7 +98,7 @@ async def get_users(
 )
 async def create_user(
     request: dict,
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -196,7 +196,7 @@ async def create_user(
 )
 async def get_user_detail(
     user_id: str,
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """获取用户详细信息（仅管理员）"""
@@ -220,7 +220,7 @@ async def get_user_detail(
 async def update_user_status(
     user_id: str,
     request: UpdateUserStatusRequest,
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -231,7 +231,7 @@ async def update_user_status(
     """
     
     # 不能修改自己的状态
-    if user_id == current_user_id:
+    if user_id == current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="不能修改自己的账号状态"
@@ -267,7 +267,7 @@ async def update_user_status(
 async def update_user_role(
     user_id: str,
     request: UpdateUserRoleRequest,
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -280,7 +280,7 @@ async def update_user_role(
     """
     
     # 不能修改自己的角色
-    if user_id == current_user_id:
+    if user_id == current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="不能修改自己的角色"
@@ -315,7 +315,7 @@ async def update_user_role(
 async def admin_reset_user_password(
     user_id: str,
     request: AdminResetPasswordRequest,
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """管理员重置用户密码（仅管理员）"""
@@ -351,7 +351,7 @@ async def admin_reset_user_password(
 async def delete_user(
     user_id: str,
     hard_delete: bool = Query(False, description="是否硬删除（true:物理删除, false:标记为禁用）"),
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -362,7 +362,7 @@ async def delete_user(
     """
     
     # 不能删除自己
-    if user_id == current_user_id:
+    if user_id == current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="不能删除自己的账号"
@@ -404,7 +404,7 @@ async def delete_user(
     description="获取系统运营统计数据"
 )
 async def get_statistics_overview(
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -464,7 +464,7 @@ async def get_all_assessments(
     start_date: Optional[str] = Query(None, description="开始日期 YYYY-MM-DD"),
     end_date: Optional[str] = Query(None, description="结束日期 YYYY-MM-DD"),
     keyword: Optional[str] = Query(None, description="搜索关键词（用户邮箱/昵称）"),
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -574,7 +574,7 @@ async def get_all_assessments(
 )
 async def get_assessment_detail_admin(
     assessment_id: str,
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """获取指定评估的完整详情（仅管理员）"""
@@ -612,7 +612,7 @@ async def get_assessment_detail_admin(
 )
 async def delete_assessment_admin(
     assessment_id: str,
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """删除评估记录（仅管理员）"""
@@ -640,7 +640,7 @@ async def delete_assessment_admin(
     description="获取系统详细的统计分析数据"
 )
 async def get_detailed_statistics(
-    current_user_id: str = Depends(require_admin),
+    current_user: CurrentUser = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """

@@ -131,7 +131,7 @@ export interface AssessmentV2Response {
       content: string
       priority: number
     }>
-    ai_recommendation: string  // GLM-4.6 生成的 AI 建议
+    ai_recommendation: string  // DeepSeek 生成的 AI 建议
   }
 
   user_profile: {

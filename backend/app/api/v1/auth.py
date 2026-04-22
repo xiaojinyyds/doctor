@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, get_current_user_id
 from app.core.redis_client import redis_client
 from app.core.email import email_service
+from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.user import (
     SendCodeRequest,
@@ -85,10 +86,22 @@ async def register(request: UserRegisterRequest, db: Session = Depends(get_db)):
                 detail="该邮箱已注册"
             )
         
-        # 3. 创建用户（B2B升级：默认分配到默认租户）
+        # 3. 确保默认租户存在并创建用户
+        tenant_id = settings.DEFAULT_TENANT_ID
+        default_tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if not default_tenant:
+            db.add(Tenant(
+                id=tenant_id,
+                name=settings.DEFAULT_TENANT_NAME,
+                short_name=settings.DEFAULT_TENANT_NAME,
+                type="hospital",
+                status="active"
+            ))
+            db.flush()
+
         user = User(
             id=generate_uuid(),
-            tenant_id="tenant-default",  # B2B升级：默认租户
+            tenant_id=tenant_id,  # B2B升级：默认租户
             email=request.email,
             password_hash=get_password_hash(request.password),
             nickname=request.nickname or request.email.split('@')[0],
@@ -107,7 +120,7 @@ async def register(request: UserRegisterRequest, db: Session = Depends(get_db)):
         # 5. 生成Token（B2B升级：包含租户ID和角色）
         access_token = create_access_token(data={
             "sub": user.id,
-            "tenant_id": user.tenant_id or "tenant-default",
+            "tenant_id": user.tenant_id or settings.DEFAULT_TENANT_ID,
             "role": user.role
         })
         
@@ -167,7 +180,7 @@ async def login(request: UserLoginRequest, db: Session = Depends(get_db)):
     # 5. 生成Token（B2B升级：包含租户ID和角色）
     access_token = create_access_token(data={
         "sub": user.id,
-        "tenant_id": user.tenant_id or "tenant-default",
+        "tenant_id": user.tenant_id or settings.DEFAULT_TENANT_ID,
         "role": user.role
     })
     
@@ -554,4 +567,3 @@ async def reset_password(request: ResetPasswordRequest, db: Session = Depends(ge
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"密码重置失败: {str(e)}"
         )
-

@@ -25,7 +25,7 @@
         <ul class="feature-list">
           <li><i class="el-icon-check"></i> 基于XGBoost的精准风险预测</li>
           <li><i class="el-icon-check"></i> SHAP可解释性分析</li>
-          <li><i class="el-icon-check"></i> GLM-4.6 AI个性化健康建议</li>
+          <li><i class="el-icon-check"></i> DeepSeek AI个性化健康建议</li>
           <li><i class="el-icon-check"></i> 详细的饮食、压力、环境因素分析</li>
           <li><i class="el-icon-check"></i> 女性特有因素评估</li>
         </ul>

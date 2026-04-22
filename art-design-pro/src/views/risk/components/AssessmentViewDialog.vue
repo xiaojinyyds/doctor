@@ -149,7 +149,7 @@
           <template #header>
             <div class="block-title" style="display: flex; align-items: center; gap: 10px;">
               <span>AI个性化健康建议</span>
-              <ElTag type="success" size="small" effect="dark">GLM-4.6</ElTag>
+              <ElTag type="success" size="small" effect="dark">DeepSeek</ElTag>
               <div style="flex: 1"></div>
               <ElButton
                 v-if="!aiRecommendation && !isGeneratingAI"
@@ -188,7 +188,7 @@
               <div class="ai-text">{{ aiRecommendation }}</div>
               <div class="ai-footer">
                 <ElIcon><InfoFilled /></ElIcon>
-                <span>此建议由智谱GLM-4.6大模型生成，仅供参考，不构成医疗诊断。</span>
+                <span>此建议由 DeepSeek 大模型生成，仅供参考，不构成医疗诊断。</span>
               </div>
             </div>
             

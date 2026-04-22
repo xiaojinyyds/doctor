@@ -14,7 +14,11 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 # 模型路径
-MODEL_PATH = Path(__file__).parent.parent.parent / "ml_models" / "saved_models" / "breast_ultrasound_best.pth"
+MODEL_CANDIDATES = [
+    Path(__file__).parent.parent.parent / "ml_models" / "saved_models" / "breast_ultrasound_best.pth",
+    Path(__file__).parent.parent.parent.parent / "breast_ultrasound_best.pth",
+]
+MODEL_PATH = next((path for path in MODEL_CANDIDATES if path.exists()), MODEL_CANDIDATES[0])
 
 
 class BreastCancerCNN(nn.Module):
@@ -168,16 +172,16 @@ class ImageClassifier:
                 'recommendation': recommendation
             }
             
-            # 如果需要生成标注图
+            # 如果需要生成可视化热力图
             if generate_annotation and predicted_class != 'normal':
                 try:
                     annotated_image_bytes = self._generate_annotated_image(
                         image_bytes, image_tensor, predicted_class, confidence_value
                     )
                     result['annotated_image_bytes'] = annotated_image_bytes
-                    logger.info("✅ 已生成病灶标注图")
+                    logger.info("✅ 已生成热力图叠加图")
                 except Exception as e:
-                    logger.warning(f"生成标注图失败: {e}")
+                    logger.warning(f"生成热力图叠加图失败: {e}")
             
             return result
         
@@ -193,7 +197,7 @@ class ImageClassifier:
         confidence: float
     ) -> bytes:
         """
-        生成带病灶标注的图像
+        生成热力图叠加图像
         
         Args:
             image_bytes: 原始图像字节
@@ -202,9 +206,9 @@ class ImageClassifier:
             confidence: 置信度
             
         Returns:
-            标注后的图像字节
+            叠加后的图像字节
         """
-        from app.utils.gradcam import generate_gradcam, annotate_image_with_lesions
+        from app.utils.gradcam import generate_gradcam, overlay_heatmap_on_image
         
         try:
             # 生成Grad-CAM热力图
@@ -220,13 +224,11 @@ class ImageClassifier:
                 logger.warning("Grad-CAM生成失败")
                 return image_bytes
             
-            # 在图像上标注病灶位置
-            annotated_bytes = annotate_image_with_lesions(
+            # 将热力图叠加到原图上，作为解释性可视化
+            annotated_bytes = overlay_heatmap_on_image(
                 image_bytes=image_bytes,
                 heatmap=cam,
-                predicted_class=predicted_class,
-                confidence=confidence,
-                threshold=0.7  # 更高阈值，更精确的标注
+                alpha=0.35
             )
             
             return annotated_bytes

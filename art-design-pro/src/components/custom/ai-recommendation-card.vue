@@ -7,7 +7,7 @@
         </div>
         <div class="header-content">
           <h3>🤖 AI个性化健康建议</h3>
-          <p class="subtitle">由 GLM-4.6 大模型智能生成</p>
+          <p class="subtitle">由 DeepSeek 大模型智能生成</p>
         </div>
       </div>
     </template>

@@ -5,10 +5,12 @@ FastAPI应用主入口
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from app.core.config import settings
-from app.core.database import engine, Base
+from app.core.database import engine, Base, SessionLocal
 from app.api.v1 import auth, assessment, admin, share, knowledge, assessment_v2, upload, medical_image, medical_image_v2, doctor
 
 # 导入所有模型（确保表被创建）
@@ -17,6 +19,27 @@ from app.models.tenant import Tenant  # B2B升级：导入租户模型
 from app.models.questionnaire import Questionnaire
 from app.models.assessment import Assessment, Recommendation, Report
 from app.models.medical_image import MedicalImage, ImageAnalysisResult, ImageAnnotation, HealthRecord
+
+
+def ensure_default_tenant():
+    """确保默认租户存在，避免注册等流程因为外键失败。"""
+    db = SessionLocal()
+    try:
+        tenant = db.query(Tenant).filter(Tenant.id == settings.DEFAULT_TENANT_ID).first()
+        if tenant:
+            return
+
+        db.add(Tenant(
+            id=settings.DEFAULT_TENANT_ID,
+            name=settings.DEFAULT_TENANT_NAME,
+            short_name=settings.DEFAULT_TENANT_NAME,
+            type="hospital",
+            status="active"
+        ))
+        db.commit()
+        print(f"✅ 已初始化默认租户: {settings.DEFAULT_TENANT_ID}")
+    finally:
+        db.close()
 
 
 @asynccontextmanager
@@ -30,6 +53,7 @@ async def lifespan(app: FastAPI):
     
     # 创建数据库表
     Base.metadata.create_all(bind=engine)
+    ensure_default_tenant()
     
     yield
     
@@ -55,6 +79,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+upload_dir = Path(settings.UPLOAD_DIR)
+upload_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=upload_dir), name="uploads")
 
 
 # 根路由
@@ -151,4 +179,3 @@ if __name__ == "__main__":
         port=8000,
         reload=True
     )
-

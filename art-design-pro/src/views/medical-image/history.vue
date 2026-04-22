@@ -168,7 +168,7 @@
           <div v-if="detailData.result.annotated_image_url" class="image-box">
             <h4 class="image-title">
               <i class="el-icon-view"></i>
-              AI病灶标注图
+              AI关注区域热力图
             </h4>
             <el-image
               :src="detailData.result.annotated_image_url"
@@ -178,7 +178,7 @@
             />
             <el-tag type="warning" size="small" class="image-badge">
               <i class="el-icon-warning"></i>
-              圆圈标注可疑区域
+              颜色越暖表示模型关注度越高
             </el-tag>
           </div>
         </div>
@@ -284,7 +284,7 @@
         <el-button @click="detailDialogVisible = false">关闭</el-button>
         <el-button type="primary" @click="downloadAnnotatedImage" v-if="detailData?.result.annotated_image_url">
           <i class="el-icon-download"></i>
-          下载标注图
+          下载热力图
         </el-button>
       </template>
     </el-dialog>

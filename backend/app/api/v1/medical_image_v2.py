@@ -12,7 +12,7 @@ from PIL import Image
 import io
 
 from app.core.database import get_db
-from app.core.security import get_current_user_id
+from app.core.security import CurrentUser, get_current_user, require_doctor_or_admin
 from app.services.medical_image_service import MedicalImageService
 from app.models.medical_image import ImageAnalysisResult
 from app.schemas.medical_image import (
@@ -35,7 +35,7 @@ async def upload_and_analyze_image(
     acquisition_date: Optional[date] = Query(None, description="影像采集日期"),
     institution: Optional[str] = Query(None, description="检查机构"),
     generate_heatmap: bool = Query(False, description="是否生成热力图"),
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -52,6 +52,8 @@ async def upload_and_analyze_image(
     返回影像记录和分析结果（包含OSS URL）
     """
     try:
+        user_id = current_user.user_id
+        tenant_id = current_user.tenant_id
         # 1. 验证文件
         if not file.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail="文件类型错误，请上传图像文件")
@@ -99,13 +101,14 @@ async def upload_and_analyze_image(
             institution=institution
         )
         
-        medical_image = MedicalImageService.create_medical_image(db, user_id, image_data)
+        medical_image = MedicalImageService.create_medical_image(db, user_id, tenant_id, image_data)
         
         # 4. 执行AI分析
         analysis_result = MedicalImageService.analyze_image(
             db=db,
             image_id=medical_image.id,
             user_id=user_id,
+            tenant_id=tenant_id,
             image_bytes=image_bytes,
             generate_heatmap=generate_heatmap
         )
@@ -158,7 +161,7 @@ async def get_user_image_history(
     skip: int = Query(0, ge=0, description="跳过数量"),
     limit: int = Query(20, ge=1, le=100, description="限制数量"),
     image_type: Optional[str] = Query(None, description="影像类型过滤"),
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -166,11 +169,13 @@ async def get_user_image_history(
     
     支持分页和类型过滤
     """
+    user_id = current_user.user_id
     try:
         # 获取影像列表
         images = MedicalImageService.get_user_images(
             db=db,
             user_id=user_id,
+            tenant_id=current_user.tenant_id,
             skip=skip,
             limit=limit,
             image_type=image_type
@@ -223,7 +228,7 @@ async def get_user_image_history(
 @router.get("/statistics", summary="获取影像分析统计")
 async def get_analysis_statistics(
     days: int = Query(30, ge=1, le=365, description="统计天数"),
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -235,12 +240,14 @@ async def get_analysis_statistics(
     - 平均置信度
     - 高风险数量
     """
+    user_id = current_user.user_id
     try:
         start_date = datetime.now() - __import__('datetime').timedelta(days=days)
         
         stats = MedicalImageService.get_analysis_statistics(
             db=db,
             user_id=user_id,
+            tenant_id=current_user.tenant_id,
             start_date=start_date
         )
         
@@ -275,7 +282,7 @@ async def get_analysis_statistics(
 @router.get("/risk-trend", summary="获取风险趋势")
 async def get_risk_trend(
     days: int = Query(30, ge=7, le=365, description="趋势天数"),
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -283,10 +290,12 @@ async def get_risk_trend(
     
     用于绘制风险趋势图表
     """
+    user_id = current_user.user_id
     try:
         trend_data = MedicalImageService.get_risk_trend(
             db=db,
             user_id=user_id,
+            tenant_id=current_user.tenant_id,
             days=days
         )
         
@@ -311,7 +320,7 @@ async def get_risk_trend(
 async def compare_images(
     image_id_1: str = Body(..., description="第一张影像ID"),
     image_id_2: str = Body(..., description="第二张影像ID"),
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -319,6 +328,7 @@ async def compare_images(
     
     用于观察病情变化趋势
     """
+    user_id = current_user.user_id
     try:
         comparison = MedicalImageService.compare_images(
             db=db,
@@ -346,12 +356,13 @@ async def compare_images(
 @router.get("/result/{result_id}", summary="获取分析结果详情")
 async def get_analysis_result_detail(
     result_id: str,
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     获取影像分析结果的详细信息
     """
+    user_id = current_user.user_id
     try:
         result = MedicalImageService.get_analysis_result_by_id(db, result_id)
         
@@ -359,7 +370,9 @@ async def get_analysis_result_detail(
             raise HTTPException(status_code=404, detail="分析结果不存在")
         
         # 验证权限
-        if result.user_id != user_id:
+        if result.user_id != user_id or (
+            current_user.tenant_id and result.tenant_id and result.tenant_id != current_user.tenant_id
+        ):
             raise HTTPException(status_code=403, detail="无权访问此分析结果")
         
         # 获取关联的影像信息
@@ -415,7 +428,7 @@ async def get_analysis_result_detail(
 async def get_pending_review_list(
     skip: int = Query(0, ge=0, description="跳过数量"),
     limit: int = Query(20, ge=1, le=100, description="限制数量"),
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(require_doctor_or_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -427,9 +440,12 @@ async def get_pending_review_list(
         from sqlalchemy import desc
         
         # 查询未审核的分析结果
-        query = db.query(ImageAnalysisResult)\
-            .filter(ImageAnalysisResult.reviewed_by_doctor == False)\
-            .order_by(desc(ImageAnalysisResult.created_at))
+        query = db.query(ImageAnalysisResult).filter(
+            ImageAnalysisResult.reviewed_by_doctor == False
+        )
+        if current_user.tenant_id:
+            query = query.filter(ImageAnalysisResult.tenant_id == current_user.tenant_id)
+        query = query.order_by(desc(ImageAnalysisResult.created_at))
         
         total = query.count()
         results = query.offset(skip).limit(limit).all()
@@ -493,7 +509,7 @@ async def get_pending_review_list(
 async def doctor_review_result(
     result_id: str,
     review_data: DoctorReviewRequest,
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(require_doctor_or_admin),
     db: Session = Depends(get_db)
 ):
     """
@@ -501,6 +517,7 @@ async def doctor_review_result(
     
     仅医生角色可以调用
     """
+    user_id = current_user.user_id
     try:
         # TODO: 验证用户是否为医生角色
         
@@ -508,6 +525,7 @@ async def doctor_review_result(
             db=db,
             result_id=result_id,
             doctor_id=user_id,
+            tenant_id=current_user.tenant_id,
             doctor_opinion=review_data.doctor_opinion,
             true_label=review_data.true_label
         )
@@ -534,14 +552,20 @@ async def doctor_review_result(
 @router.delete("/image/{image_id}", summary="删除医学影像")
 async def delete_image(
     image_id: str,
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     删除医学影像（同时删除关联的分析结果）
     """
+    user_id = current_user.user_id
     try:
-        success = MedicalImageService.delete_image(db, image_id, user_id)
+        success = MedicalImageService.delete_image(
+            db=db,
+            image_id=image_id,
+            user_id=user_id,
+            tenant_id=current_user.tenant_id
+        )
         
         if not success:
             raise HTTPException(status_code=404, detail="影像不存在或无权删除")
@@ -564,7 +588,7 @@ async def delete_image(
 
 @router.get("/dashboard", summary="影像分析仪表板")
 async def get_dashboard_data(
-    user_id: str = Depends(get_current_user_id),
+    current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -575,11 +599,13 @@ async def get_dashboard_data(
     - 最近分析记录
     - 风险趋势
     """
+    user_id = current_user.user_id
     try:
         # 统计信息（最近30天）
         stats = MedicalImageService.get_analysis_statistics(
             db=db,
             user_id=user_id,
+            tenant_id=current_user.tenant_id,
             start_date=datetime.now() - __import__('datetime').timedelta(days=30)
         )
         
@@ -587,6 +613,7 @@ async def get_dashboard_data(
         recent_analyses = MedicalImageService.get_user_analysis_history(
             db=db,
             user_id=user_id,
+            tenant_id=current_user.tenant_id,
             skip=0,
             limit=5
         )
@@ -595,6 +622,7 @@ async def get_dashboard_data(
         risk_trend = MedicalImageService.get_risk_trend(
             db=db,
             user_id=user_id,
+            tenant_id=current_user.tenant_id,
             days=30
         )
         

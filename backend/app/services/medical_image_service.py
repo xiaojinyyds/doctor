@@ -31,6 +31,7 @@ class MedicalImageService:
     def create_medical_image(
         db: Session,
         user_id: str,
+        tenant_id: Optional[str],
         image_data: MedicalImageCreate
     ) -> MedicalImage:
         """
@@ -47,6 +48,7 @@ class MedicalImageService:
         medical_image = MedicalImage(
             id=str(uuid.uuid4()),
             user_id=user_id,
+            tenant_id=tenant_id,
             **image_data.dict()
         )
         
@@ -62,6 +64,7 @@ class MedicalImageService:
         db: Session,
         image_id: str,
         user_id: str,
+        tenant_id: Optional[str],
         image_bytes: bytes,
         generate_heatmap: bool = False
     ) -> ImageAnalysisResult:
@@ -122,6 +125,7 @@ class MedicalImageService:
             # 创建分析结果记录
             analysis_result = ImageAnalysisResult(
                 id=str(uuid.uuid4()),
+                tenant_id=tenant_id or (medical_image.tenant_id if medical_image else None),
                 image_id=image_id,
                 user_id=user_id,
                 predicted_class=prediction_result.get('prediction_en', 'unknown'),
@@ -200,6 +204,7 @@ class MedicalImageService:
     def get_user_images(
         db: Session,
         user_id: str,
+        tenant_id: Optional[str] = None,
         skip: int = 0,
         limit: int = 20,
         image_type: Optional[str] = None
@@ -218,6 +223,9 @@ class MedicalImageService:
             医学影像列表
         """
         query = db.query(MedicalImage).filter(MedicalImage.user_id == user_id)
+
+        if tenant_id:
+            query = query.filter(MedicalImage.tenant_id == tenant_id)
         
         if image_type:
             query = query.filter(MedicalImage.image_type == image_type)
@@ -250,6 +258,7 @@ class MedicalImageService:
     def get_user_analysis_history(
         db: Session,
         user_id: str,
+        tenant_id: Optional[str] = None,
         skip: int = 0,
         limit: int = 50
     ) -> List[ImageAnalysisResult]:
@@ -265,9 +274,12 @@ class MedicalImageService:
         Returns:
             分析结果列表
         """
-        results = db.query(ImageAnalysisResult)\
-            .filter(ImageAnalysisResult.user_id == user_id)\
-            .order_by(desc(ImageAnalysisResult.created_at))\
+        query = db.query(ImageAnalysisResult).filter(ImageAnalysisResult.user_id == user_id)
+
+        if tenant_id:
+            query = query.filter(ImageAnalysisResult.tenant_id == tenant_id)
+
+        results = query.order_by(desc(ImageAnalysisResult.created_at))\
             .offset(skip)\
             .limit(limit)\
             .all()
@@ -277,6 +289,7 @@ class MedicalImageService:
     def get_analysis_statistics(
         db: Session,
         user_id: Optional[str] = None,
+        tenant_id: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
     ) -> ImageAnalysisStats:
@@ -299,6 +312,10 @@ class MedicalImageService:
         if user_id:
             image_query = image_query.filter(MedicalImage.user_id == user_id)
             result_query = result_query.filter(ImageAnalysisResult.user_id == user_id)
+
+        if tenant_id:
+            image_query = image_query.filter(MedicalImage.tenant_id == tenant_id)
+            result_query = result_query.filter(ImageAnalysisResult.tenant_id == tenant_id)
         
         if start_date:
             image_query = image_query.filter(MedicalImage.created_at >= start_date)
@@ -325,6 +342,7 @@ class MedicalImageService:
         from sqlalchemy import func as sql_func
         avg_confidence = db.query(sql_func.avg(ImageAnalysisResult.confidence))\
             .filter(ImageAnalysisResult.user_id == user_id if user_id else True)\
+            .filter(ImageAnalysisResult.tenant_id == tenant_id if tenant_id else True)\
             .scalar()
         
         return ImageAnalysisStats(
@@ -344,6 +362,7 @@ class MedicalImageService:
         result_id: str,
         doctor_id: str,
         doctor_opinion: str,
+        tenant_id: Optional[str] = None,
         true_label: Optional[str] = None
     ) -> ImageAnalysisResult:
         """
@@ -359,9 +378,10 @@ class MedicalImageService:
         Returns:
             更新后的分析结果
         """
-        result = db.query(ImageAnalysisResult)\
-            .filter(ImageAnalysisResult.id == result_id)\
-            .first()
+        query = db.query(ImageAnalysisResult).filter(ImageAnalysisResult.id == result_id)
+        if tenant_id:
+            query = query.filter(ImageAnalysisResult.tenant_id == tenant_id)
+        result = query.first()
         
         if not result:
             raise ValueError("分析结果不存在")
@@ -406,6 +426,7 @@ class MedicalImageService:
     def get_risk_trend(
         db: Session,
         user_id: str,
+        tenant_id: Optional[str] = None,
         days: int = 30
     ) -> List[Dict]:
         """
@@ -425,6 +446,7 @@ class MedicalImageService:
             .filter(
                 and_(
                     ImageAnalysisResult.user_id == user_id,
+                    ImageAnalysisResult.tenant_id == tenant_id if tenant_id else True,
                     ImageAnalysisResult.created_at >= start_date
                 )
             )\
@@ -447,7 +469,8 @@ class MedicalImageService:
     def delete_image(
         db: Session,
         image_id: str,
-        user_id: str
+        user_id: str,
+        tenant_id: Optional[str] = None
     ) -> bool:
         """
         删除医学影像（仅用户自己可删除）
@@ -460,13 +483,15 @@ class MedicalImageService:
         Returns:
             是否成功
         """
+        conditions = [
+            MedicalImage.id == image_id,
+            MedicalImage.user_id == user_id,
+        ]
+        if tenant_id:
+            conditions.append(MedicalImage.tenant_id == tenant_id)
+
         image = db.query(MedicalImage)\
-            .filter(
-                and_(
-                    MedicalImage.id == image_id,
-                    MedicalImage.user_id == user_id
-                )
-            )\
+            .filter(and_(*conditions))\
             .first()
         
         if not image:

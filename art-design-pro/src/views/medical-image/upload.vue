@@ -24,6 +24,20 @@
             推理时间&lt;200ms
           </el-tag>
         </div>
+        <div class="header-metrics">
+          <div class="metric-card">
+            <span class="metric-label">识别任务</span>
+            <strong>良恶性分类</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">解释能力</span>
+            <strong>热力图可视化</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">适用场景</span>
+            <strong>医生辅助初筛</strong>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -38,6 +52,7 @@
                 <i class="iconfont-sys">&#xe621;</i>
                 上传影像
               </span>
+              <el-tag effect="plain" type="info">Step 01</el-tag>
             </div>
           </template>
 
@@ -87,7 +102,18 @@
             </el-button>
           </div>
 
-          <!-- 标注图展示（在上传卡片内） -->
+          <div class="upload-tip-rail">
+            <div class="tip-item">
+              <i class="el-icon-circle-check"></i>
+              建议上传完整乳腺超声切面，减少遮挡与裁切
+            </div>
+            <div class="tip-item">
+              <i class="el-icon-data-analysis"></i>
+              热力图用于解释模型关注区域，不替代病灶精确分割
+            </div>
+          </div>
+
+          <!-- 热力图展示（在上传卡片内） -->
           <div
             v-if="analysisResult && analysisResult.analysis.annotated_image_url"
             class="annotated-section"
@@ -95,11 +121,11 @@
             <div class="annotated-header">
               <h4>
                 <i class="el-icon-picture-outline"></i>
-                AI病灶标注图
+                AI关注区域热力图
               </h4>
               <el-tag type="warning" size="small" effect="plain">
                 <i class="el-icon-warning"></i>
-                圆圈标注为可疑区域
+                颜色越暖表示模型关注度越高
               </el-tag>
             </div>
             <el-image
@@ -114,7 +140,7 @@
               <template #error>
                 <div class="image-error-box">
                   <i class="el-icon-picture-outline"></i>
-                  <span>标注图加载失败</span>
+                  <span>热力图加载失败</span>
                 </div>
               </template>
             </el-image>
@@ -131,11 +157,27 @@
                 <i class="iconfont-sys">&#xe61b;</i>
                 分析结果
               </span>
+              <el-tag effect="plain" type="success">Step 02</el-tag>
             </div>
           </template>
 
           <!-- 分析结果展示 -->
           <div v-if="analysisResult" class="result-content">
+            <div class="result-snapshot">
+              <div class="snapshot-item">
+                <span class="snapshot-label">风险等级</span>
+                <strong>{{ analysisResult.analysis.risk_level }}</strong>
+              </div>
+              <div class="snapshot-item">
+                <span class="snapshot-label">主要结论</span>
+                <strong>{{ analysisResult.analysis.predicted_class }}</strong>
+              </div>
+              <div class="snapshot-item">
+                <span class="snapshot-label">模型置信度</span>
+                <strong>{{ analysisResult.analysis.confidence_percentage }}</strong>
+              </div>
+            </div>
+
             <!-- 预测类别 -->
             <div class="result-main">
               <div class="result-icon" :class="`result-${analysisResult.analysis.risk_level}`">
@@ -220,7 +262,12 @@
           </div>
 
           <!-- 空状态 -->
-          <el-empty v-else description="请上传图像进行分析" :image-size="120" />
+          <div v-else class="result-empty-state">
+            <el-empty description="请上传图像进行分析" :image-size="120" />
+            <div class="empty-footnote">
+              分析完成后将展示分类结果、热力图解释与关键指标
+            </div>
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -281,7 +328,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type UploadFile } from 'element-plus'
 import { medicalImageAPI } from '@/api/medical-image'
@@ -431,16 +478,22 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .medical-image-upload-container {
-  padding: 20px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 180, 255, 0.1), transparent 28%),
+    radial-gradient(circle at top right, rgba(255, 177, 96, 0.12), transparent 24%),
+    linear-gradient(180deg, #f4f8fb 0%, #edf3f8 100%);
 }
 
 .page-header {
   margin-bottom: 24px;
-  padding: 32px;
-  background: linear-gradient(to right, #f5f7fa 0%, #e8f4f8 100%);
-  border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  padding: 34px 32px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)),
+    linear-gradient(120deg, #d7ebff, #fff3de);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 24px 60px rgba(31, 59, 87, 0.08);
 
   .header-content {
     max-width: 1200px;
@@ -458,7 +511,7 @@ onUnmounted(() => {
 
     i {
       font-size: 36px;
-      color: #409eff;
+      color: #0d6efd;
     }
   }
 
@@ -473,6 +526,53 @@ onUnmounted(() => {
     gap: 12px;
     flex-wrap: wrap;
   }
+
+  .header-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+  }
+
+  .metric-card {
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.66);
+    border: 1px solid rgba(15, 108, 189, 0.08);
+    border-radius: 18px;
+
+    .metric-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: #6c7a90;
+      text-transform: uppercase;
+    }
+
+    strong {
+      font-size: 18px;
+      color: #12233f;
+    }
+  }
+}
+
+.upload-card,
+.result-card,
+.guide-card {
+  border: 1px solid rgba(214, 225, 235, 0.95);
+  border-radius: 24px;
+  box-shadow: 0 20px 44px rgba(26, 48, 72, 0.06);
+  overflow: hidden;
+
+  :deep(.el-card__header) {
+    padding: 20px 24px;
+    background: linear-gradient(180deg, #fff, #f8fbfd);
+    border-bottom: 1px solid rgba(222, 231, 239, 0.9);
+  }
+
+  :deep(.el-card__body) {
+    padding: 24px;
+  }
 }
 
 .upload-card {
@@ -481,6 +581,7 @@ onUnmounted(() => {
     font-weight: 600;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
   }
 }
@@ -493,6 +594,7 @@ onUnmounted(() => {
     font-weight: 600;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
   }
 }
@@ -509,8 +611,10 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     border: 2px dashed var(--el-border-color);
-    border-radius: 8px;
+    border-radius: 20px;
     transition: all 0.3s;
+    background:
+      linear-gradient(180deg, rgba(249, 252, 255, 0.95), rgba(242, 247, 251, 0.95));
 
     &:hover {
       border-color: var(--el-color-primary);
@@ -550,7 +654,7 @@ onUnmounted(() => {
   .preview-image {
     max-width: 100%;
     max-height: 100%;
-    border-radius: 8px;
+    border-radius: 20px;
   }
 
   .delete-icon {
@@ -587,6 +691,28 @@ onUnmounted(() => {
 
   .analyze-btn {
     min-width: 160px;
+  }
+}
+
+.upload-tip-rail {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.tip-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #4f6179;
+  background: rgba(245, 250, 255, 0.9);
+  border: 1px solid rgba(15, 108, 189, 0.08);
+  border-radius: 14px;
+
+  i {
+    color: #0d6efd;
   }
 }
 
@@ -647,6 +773,31 @@ onUnmounted(() => {
 }
 
 .result-content {
+  .result-snapshot {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .snapshot-item {
+    padding: 14px 16px;
+    background: linear-gradient(180deg, #fbfdff, #f3f8fc);
+    border: 1px solid rgba(15, 108, 189, 0.08);
+    border-radius: 18px;
+
+    .snapshot-label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: #6f7d92;
+    }
+
+    strong {
+      font-size: 18px;
+      color: #15233e;
+    }
+  }
 
   .result-main {
     text-align: center;
@@ -756,6 +907,20 @@ onUnmounted(() => {
   }
 }
 
+.result-empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 460px;
+}
+
+.empty-footnote {
+  margin-top: -6px;
+  text-align: center;
+  font-size: 13px;
+  color: #7a8799;
+}
+
 .guide-card {
   margin-top: 24px;
 
@@ -792,6 +957,14 @@ onUnmounted(() => {
 
 .disclaimer {
   margin-top: 24px;
+  border-radius: 18px;
+}
+
+@media (width <= 900px) {
+  .page-header .header-metrics,
+  .result-content .result-snapshot {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 

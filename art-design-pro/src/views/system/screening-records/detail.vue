@@ -262,7 +262,7 @@
           <div class="card-header">
             <i class="iconfont-sys" style="color: #67c23a">&#xe7a0;</i>
             <span>🤖 AI个性化建议</span>
-            <ElTag type="success" size="small" effect="dark">GLM-4.6</ElTag>
+            <ElTag type="success" size="small" effect="dark">DeepSeek</ElTag>
           </div>
         </template>
         <div class="ai-content">

@@ -133,8 +133,8 @@ async def submit_assessment_v2(
         print(f"🔍 开始V2.0风险评估...")
         result = assess_risk_v2(assessment_data)
         
-        # 4. 调用GLM-4.6生成AI个性化建议
-        print(f"🤖 调用GLM-4.6生成个性化建议...")
+        # 4. 调用DeepSeek生成AI个性化建议
+        print(f"🤖 调用DeepSeek生成个性化建议...")
         ai_recommendation = llm_service.generate_personalized_recommendations(
             user_data=assessment_data,
             risk_result=result

@@ -39,6 +39,21 @@
       </div>
     </div>
 
+    <div class="report-command">
+      <div class="command-item">
+        <span class="command-label">诊断视角</span>
+        <strong>风险分层 + 可解释分析</strong>
+      </div>
+      <div class="command-item">
+        <span class="command-label">模型体系</span>
+        <strong>XGBoost / SHAP / DeepSeek</strong>
+      </div>
+      <div class="command-item">
+        <span class="command-label">建议状态</span>
+        <strong>{{ aiRecommendation ? '已生成个性化建议' : '待生成个性化建议' }}</strong>
+      </div>
+    </div>
+
     <div v-loading="loading" element-loading-text="正在生成报告..." class="report-content">
       <!-- 风险总览 -->
       <ElCard class="report-card professional-card" shadow="hover">
@@ -90,6 +105,13 @@
                 {{ getRiskNote(reportData.overallRisk.level) }}
               </template>
             </ElAlert>
+            <div class="executive-grid">
+              <div v-for="item in executiveSummary" :key="item.label" class="executive-item">
+                <span class="executive-label">{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+                <p>{{ item.note }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </ElCard>
@@ -210,7 +232,7 @@
               <i class="iconfont-sys" style="color: #67c23a">&#xe7a0;</i>
               <span>AI个性化健康建议</span>
             </div>
-            <ElTag type="success" size="small" effect="dark">智谱GLM-4.6</ElTag>
+            <ElTag type="success" size="small" effect="dark">DeepSeek</ElTag>
             <div style="flex: 1"></div>
             <ElButton
               v-if="!aiRecommendation && !isGeneratingAI"
@@ -254,7 +276,7 @@
             <div class="ai-footer">
               <ElIcon><InfoFilled /></ElIcon>
               <span class="disclaimer">
-                此建议由智谱GLM-4.6大模型基于您的评估数据生成，仅供参考，不构成医疗诊断。如有疑虑请咨询专业医生。
+                此建议由 DeepSeek 大模型基于您的评估数据生成，仅供参考，不构成医疗诊断。如有疑虑请咨询专业医生。
               </span>
             </div>
           </div>
@@ -437,6 +459,30 @@
       value: data.score * 100,
       level: data.level
     }))
+  })
+
+  const executiveSummary = computed(() => {
+    const topRisk = [...categoryRisksData.value].sort((a, b) => b.value - a.value)[0]
+    const primaryFactor = reportData.value.keyFactors[0]
+    const recommendationCount = reportData.value.recommendations.length
+
+    return [
+      {
+        label: '最高风险癌种',
+        value: topRisk ? `${topRisk.name} ${topRisk.value.toFixed(0)}分` : '待评估',
+        note: '优先关注高风险部位与对应筛查路径'
+      },
+      {
+        label: '首要影响因素',
+        value: primaryFactor?.factor || '暂无',
+        note: primaryFactor?.description || '系统将根据最新评估结果自动更新'
+      },
+      {
+        label: '可执行建议',
+        value: `${recommendationCount} 条`,
+        note: '覆盖生活方式、筛查动作与随访方向'
+      }
+    ]
   })
 
   // 推荐检查项目
@@ -930,6 +976,37 @@
       }
     }
 
+    .report-command {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .command-item {
+      padding: 18px 20px;
+      background:
+        linear-gradient(145deg, rgb(255 255 255 / 90%), rgb(255 255 255 / 76%)),
+        linear-gradient(135deg, #dbefff, #fff4e5);
+      border: 1px solid rgb(255 255 255 / 78%);
+      border-radius: 20px;
+      box-shadow: 0 12px 36px rgb(14 38 64 / 6%);
+
+      .command-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        color: #6d7c90;
+        text-transform: uppercase;
+      }
+
+      strong {
+        font-size: 20px;
+        color: #17243d;
+      }
+    }
+
     // 专业卡片样式
     .professional-card {
       border: 1px solid #e8eef5;
@@ -1078,6 +1155,41 @@
 
         .risk-alert {
           border-radius: 8px;
+        }
+
+        .executive-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 14px;
+          margin-top: 18px;
+        }
+
+        .executive-item {
+          padding: 16px 16px 14px;
+          background: linear-gradient(180deg, #fbfdff, #f3f8fc);
+          border: 1px solid rgb(24 144 255 / 8%);
+          border-radius: 18px;
+
+          .executive-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #6e7a8c;
+          }
+
+          strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 19px;
+            color: #17233c;
+          }
+
+          p {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #5f6d82;
+          }
         }
       }
     }
@@ -1292,6 +1404,10 @@
     .report-container {
       padding: 10px;
 
+      .report-command {
+        grid-template-columns: 1fr;
+      }
+
       .report-header {
         flex-direction: column;
         gap: 15px;
@@ -1318,6 +1434,10 @@
         .gauge-container,
         .risk-description {
           width: 100%;
+
+          .executive-grid {
+            grid-template-columns: 1fr;
+          }
         }
       }
 

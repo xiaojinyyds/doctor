@@ -2,15 +2,36 @@
   <div class="diagnosis-workbench-container">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h1 class="page-title">
-        <i class="el-icon-document-checked"></i>
-        医生诊断工作台
-      </h1>
+      <div>
+        <h1 class="page-title">
+          <i class="el-icon-document-checked"></i>
+          医生诊断工作台
+        </h1>
+        <p class="page-desc">集中处理待审核影像、查看AI解释结果，并完成医生复核闭环。</p>
+      </div>
       <div class="header-stats">
         <el-tag type="warning" size="large">
           <i class="el-icon-warning"></i>
           待审核: {{ total }}
         </el-tag>
+      </div>
+    </div>
+
+    <div class="command-grid">
+      <div class="command-card">
+        <span class="command-label">高风险病例</span>
+        <strong>{{ highRiskCount }}</strong>
+        <p>建议优先复核 AI 判定为高风险的影像结果</p>
+      </div>
+      <div class="command-card">
+        <span class="command-label">热力图覆盖</span>
+        <strong>{{ heatmapCoverage }}%</strong>
+        <p>当前待审病例中已生成可视化解释的样本占比</p>
+      </div>
+      <div class="command-card">
+        <span class="command-label">工作建议</span>
+        <strong>{{ queueHint }}</strong>
+        <p>根据队列状态动态给出本轮审核优先级提示</p>
       </div>
     </div>
 
@@ -52,7 +73,17 @@
 
           <!-- AI分析结果 -->
           <div class="analysis-section">
-            <h3 class="section-title">AI分析结果</h3>
+            <div class="analysis-head">
+              <h3 class="section-title">AI分析结果</h3>
+              <div class="head-tags">
+                <el-tag :type="getRiskTagType(item.result.risk_level)" effect="light">
+                  {{ item.result.risk_level }}
+                </el-tag>
+                <el-tag type="info" effect="plain">
+                  {{ (item.result.confidence * 100).toFixed(1) }}% 置信度
+                </el-tag>
+              </div>
+            </div>
             <el-descriptions :column="2" size="small" border>
               <el-descriptions-item label="预测类别">
                 <el-tag :type="getRiskTagType(item.result.risk_level)" size="small">
@@ -75,6 +106,17 @@
             <div class="ai-recommendation">
               <strong>AI建议：</strong>
               <p>{{ item.result.ai_recommendation }}</p>
+            </div>
+
+            <div class="review-flags">
+              <div class="flag-item">
+                <span class="flag-label">影像文件</span>
+                <strong>{{ item.image.filename }}</strong>
+              </div>
+              <div class="flag-item">
+                <span class="flag-label">解释图谱</span>
+                <strong>{{ item.result.annotated_image_url ? '已生成热力图' : '暂无热力图' }}</strong>
+              </div>
             </div>
           </div>
 
@@ -126,7 +168,7 @@
             />
           </el-col>
           <el-col :span="12" v-if="currentItem.result.annotated_image_url">
-            <h4>AI标注图</h4>
+            <h4>AI关注区域热力图</h4>
             <el-image
               :src="currentItem.result.annotated_image_url"
               fit="contain"
@@ -184,7 +226,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { medicalImageAPI } from '@/api/medical-image'
 
@@ -215,6 +257,24 @@ const reviewRules: FormRules = {
     { min: 10, message: '诊断意见至少10个字符', trigger: 'blur' }
   ]
 }
+
+const highRiskCount = computed(() =>
+  reviewList.value.filter((item) => item.result.risk_level === '高风险').length
+)
+
+const heatmapCoverage = computed(() => {
+  if (!reviewList.value.length) return 0
+  const withHeatmap = reviewList.value.filter((item) => item.result.annotated_image_url).length
+  return Math.round((withHeatmap / reviewList.value.length) * 100)
+})
+
+const queueHint = computed(() => {
+  if (loading.value) return '队列同步中'
+  if (!reviewList.value.length) return '当前无积压'
+  if (highRiskCount.value >= 3) return '优先处理高风险'
+  if (reviewList.value.length >= 10) return '建议批量清队'
+  return '审核节奏平稳'
+})
 
 // 加载待审核列表
 const loadData = async () => {
@@ -293,7 +353,11 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .diagnosis-workbench-container {
-  padding: 20px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(58, 151, 255, 0.08), transparent 26%),
+    radial-gradient(circle at top right, rgba(255, 191, 108, 0.12), transparent 22%),
+    linear-gradient(180deg, #f4f8fb 0%, #eef3f7 100%);
 }
 
 .page-header {
@@ -301,6 +365,13 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  padding: 28px 30px;
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)),
+    linear-gradient(120deg, #dcefff, #fff5e7);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 26px;
+  box-shadow: 0 22px 52px rgba(22, 45, 72, 0.08);
 
   .page-title {
     font-size: 24px;
@@ -310,9 +381,66 @@ onMounted(() => {
     align-items: center;
     gap: 12px;
   }
+
+  .page-desc {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: #617086;
+  }
+}
+
+.command-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.command-card {
+  padding: 18px 20px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76)),
+    linear-gradient(135deg, #e3f2ff, #fff3e0);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 20px;
+  box-shadow: 0 14px 34px rgba(20, 41, 66, 0.06);
+
+  .command-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #708098;
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 24px;
+    color: #132541;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #5e6e84;
+  }
 }
 
 .review-list-card {
+  border: 1px solid rgba(214, 225, 235, 0.95);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 44px rgba(26, 48, 72, 0.06);
+
+  :deep(.el-card__header) {
+    padding: 20px 24px;
+    background: linear-gradient(180deg, #fff, #f8fbfd);
+    border-bottom: 1px solid rgba(222, 231, 239, 0.9);
+  }
+
   .card-header {
     display: flex;
     justify-content: space-between;
@@ -327,14 +455,16 @@ onMounted(() => {
     display: flex;
     gap: 20px;
     padding: 20px;
-    border: 1px solid var(--el-border-color-light);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(220, 228, 236, 0.92);
+    border-radius: 22px;
     margin-bottom: 16px;
     transition: all 0.3s;
 
     &:hover {
       border-color: var(--el-color-primary);
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 16px 36px rgba(20, 45, 72, 0.1);
+      transform: translateY(-2px);
     }
 
     .image-section {
@@ -379,17 +509,32 @@ onMounted(() => {
       flex: 1;
       min-width: 0;
 
+      .analysis-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .head-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
       .section-title {
         font-size: 16px;
         font-weight: 600;
-        margin: 0 0 12px 0;
+        margin: 0;
       }
 
       .ai-recommendation {
         margin-top: 12px;
-        padding: 12px;
-        background: var(--el-fill-color-light);
-        border-radius: 6px;
+        padding: 14px 16px;
+        background: linear-gradient(180deg, #fbfdff, #f3f8fc);
+        border: 1px solid rgba(15, 108, 189, 0.08);
+        border-radius: 14px;
         font-size: 14px;
 
         strong {
@@ -400,6 +545,32 @@ onMounted(() => {
           margin: 6px 0 0 0;
           color: var(--el-text-color-regular);
         }
+      }
+
+      .review-flags {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .flag-item {
+        padding: 12px 14px;
+        background: rgba(247, 250, 253, 0.95);
+        border: 1px solid rgba(21, 35, 62, 0.06);
+        border-radius: 12px;
+      }
+
+      .flag-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        color: #738199;
+      }
+
+      .flag-item strong {
+        font-size: 14px;
+        color: #17243d;
       }
     }
 
@@ -439,6 +610,27 @@ onMounted(() => {
     margin-left: 12px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
+  }
+}
+
+@media (width <= 900px) {
+  .command-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .review-list .review-item {
+    flex-direction: column;
+  }
+
+  .review-list .review-item .image-section {
+    width: 100%;
+  }
+
+  .review-list .review-item .analysis-section .analysis-head,
+  .review-list .review-item .analysis-section .review-flags {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

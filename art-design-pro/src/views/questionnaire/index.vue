@@ -14,7 +14,7 @@
           <h1 class="title-main">健康问卷评估</h1>
           <h2 class="title-sub">从未如此精准</h2>
           <p class="desc">
-            基于 XGBoost 机器学习模型，收集 32+ 关键特征，结合 SHAP 可解释性分析与 GLM-4.6 AI
+            基于 XGBoost 机器学习模型，收集 32+ 关键特征，结合 SHAP 可解释性分析与 DeepSeek AI
             智能建议，为您提供专业的肿瘤风险评估报告
           </p>
 
@@ -37,6 +37,56 @@
             </span>
           </div>
 
+          <div class="hero-showcase">
+            <div class="showcase-panel mission-panel">
+              <div class="panel-eyebrow">项目定位</div>
+              <h3>面向院内初筛与患者健康管理的 AI 辅助筛查平台</h3>
+              <p>
+                通过问卷评估、风险分层、可解释分析与医生协作，形成从患者自测到机构管理的闭环。
+              </p>
+              <div class="mission-grid">
+                <div class="mission-item">
+                  <span class="mission-value">4</span>
+                  <span class="mission-label">阶段评估流程</span>
+                </div>
+                <div class="mission-item">
+                  <span class="mission-value">32+</span>
+                  <span class="mission-label">关键风险特征</span>
+                </div>
+                <div class="mission-item">
+                  <span class="mission-value">SHAP</span>
+                  <span class="mission-label">可解释因子拆解</span>
+                </div>
+              </div>
+            </div>
+            <div class="showcase-panel architecture-panel">
+              <div class="panel-eyebrow">能力闭环</div>
+              <div class="flow-list">
+                <div class="flow-item">
+                  <span class="flow-index">01</span>
+                  <div>
+                    <strong>智能问卷采集</strong>
+                    <p>快速收集生活方式、家族史与近期症状</p>
+                  </div>
+                </div>
+                <div class="flow-item">
+                  <span class="flow-index">02</span>
+                  <div>
+                    <strong>风险建模评估</strong>
+                    <p>XGBoost + SHAP 输出风险等级与关键因素</p>
+                  </div>
+                </div>
+                <div class="flow-item">
+                  <span class="flow-index">03</span>
+                  <div>
+                    <strong>DeepSeek 辅助建议</strong>
+                    <p>生成面向患者可理解的个性化管理建议</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="cta">
             <el-button type="primary" size="large" class="cta-btn" @click="startQuestionnaire">
               <i class="iconfont-sys">&#xe621;</i>
@@ -49,7 +99,7 @@
             <li><i class="dot-sm"></i> SHAP 可解释性分析</li>
             <li><i class="dot-sm"></i> 自动保存草稿</li>
             <li><i class="dot-sm"></i> 数据加密存储</li>
-            <li><i class="dot-sm"></i> GLM-4.6 AI 智能建议</li>
+            <li><i class="dot-sm"></i> DeepSeek AI 智能建议</li>
           </ul>
         </div>
         <div class="decor decor-1"></div>
@@ -763,6 +813,132 @@
     box-shadow: 0 6px 18px rgb(0 0 0 / 6%);
   }
 
+  .hero-showcase {
+    display: grid;
+    grid-template-columns: 1.2fr 0.9fr;
+    gap: 22px;
+    max-width: 1040px;
+    margin: 34px auto 0;
+    text-align: left;
+  }
+
+  .showcase-panel {
+    position: relative;
+    padding: 24px 24px 22px;
+    background:
+      linear-gradient(145deg, rgb(255 255 255 / 90%), rgb(255 255 255 / 72%)),
+      linear-gradient(135deg, #d8ecff, #fff1dc);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgb(255 255 255 / 70%);
+    border-radius: 24px;
+    box-shadow:
+      0 18px 60px rgb(33 62 92 / 10%),
+      inset 0 1px 0 rgb(255 255 255 / 90%);
+  }
+
+  .panel-eyebrow {
+    display: inline-flex;
+    padding: 6px 10px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #0f6cbd;
+    background: rgb(15 108 189 / 10%);
+    border-radius: 999px;
+  }
+
+  .mission-panel h3,
+  .architecture-panel h3 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    line-height: 1.3;
+    color: #172033;
+  }
+
+  .mission-panel p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #556072;
+  }
+
+  .mission-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .mission-item {
+    padding: 16px 14px;
+    background: rgb(255 255 255 / 62%);
+    border: 1px solid rgb(15 108 189 / 10%);
+    border-radius: 18px;
+  }
+
+  .mission-value {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 22px;
+    font-weight: 800;
+    color: #102a56;
+  }
+
+  .mission-label {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #5d697d;
+  }
+
+  .flow-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .flow-item {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 12px 0;
+    border-bottom: 1px dashed rgb(16 42 86 / 12%);
+  }
+
+  .flow-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .flow-index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #0f6cbd, #25a6f7);
+    border-radius: 16px;
+    box-shadow: 0 12px 24px rgb(37 166 247 / 22%);
+  }
+
+  .flow-item strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 15px;
+    color: #15233e;
+  }
+
+  .flow-item p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #617086;
+  }
+
   .cta {
     display: flex;
     gap: 14px;
@@ -896,6 +1072,14 @@
 
     .questionnaire-hero {
       padding: 84px 16px 48px;
+    }
+
+    .hero-showcase {
+      grid-template-columns: 1fr;
+    }
+
+    .mission-grid {
+      grid-template-columns: 1fr;
     }
 
     .questionnaire-content-wrap {

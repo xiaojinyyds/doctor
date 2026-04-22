@@ -278,20 +278,39 @@ def annotate_image_with_lesions(
         # 在图像上绘制标注
         draw = ImageDraw.Draw(image)
         
-        # 尝试加载字体
-        try:
-            # 尝试加载常见的TrueType字体
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
-            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
-        except:
+        # 尝试加载字体，优先使用支持中文的 Windows 字体
+        font = None
+        font_small = None
+        font_candidates = [
+            ("C:/Windows/Fonts/msyhbd.ttc", 16),
+            ("C:/Windows/Fonts/msyh.ttc", 16),
+            ("C:/Windows/Fonts/simhei.ttf", 16),
+            ("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16),
+            ("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 16),
+        ]
+        font_small_candidates = [
+            ("C:/Windows/Fonts/msyh.ttc", 14),
+            ("C:/Windows/Fonts/simhei.ttf", 14),
+            ("C:/Windows/Fonts/arial.ttf", 14),
+            ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14),
+            ("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 14),
+        ]
+        for font_path, font_size in font_candidates:
             try:
-                # 备用字体
-                font = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 16)
-                font_small = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 14)
-            except:
-                # 使用默认字体
-                font = None
-                font_small = None
+                font = ImageFont.truetype(font_path, font_size)
+                break
+            except Exception:
+                continue
+        for font_path, font_size in font_small_candidates:
+            try:
+                font_small = ImageFont.truetype(font_path, font_size)
+                break
+            except Exception:
+                continue
+        if font is None:
+            font = ImageFont.load_default()
+        if font_small is None:
+            font_small = ImageFont.load_default()
         
         # 根据预测类别选择颜色
         color_map = {
@@ -338,6 +357,7 @@ def annotate_image_with_lesions(
             
             # 添加标签（放在圆圈上方）
             label = f"{'良性' if predicted_class == 'benign' else '恶性'} #{i+1}"
+            fallback_label = f"{'BENIGN' if predicted_class == 'benign' else 'MALIGNANT'} #{i+1}"
             label_x = center_x - 30
             label_y = center_y - radius - 30
             
@@ -346,20 +366,23 @@ def annotate_image_with_lesions(
                 label_y = center_y + radius + 10
             
             # 绘制文字背景（使用估算大小或实际字体大小）
-            if font and hasattr(font, 'getbbox'):
-                # 如果字体支持getbbox，使用它
-                text_bbox = draw.textbbox((label_x, label_y), label, font=font)
-            else:
-                # 否则估算文字大小
-                text_width = len(label) * 10  # 中文字符约10-12像素
-                text_height = 20
-                text_bbox = (label_x, label_y, label_x + text_width, label_y + text_height)
+            render_label = label
+            try:
+                text_bbox = draw.textbbox((label_x, label_y), render_label, font=font)
+            except Exception:
+                render_label = fallback_label
+                try:
+                    text_bbox = draw.textbbox((label_x, label_y), render_label, font=font)
+                except Exception:
+                    text_width = len(render_label) * 10
+                    text_height = 20
+                    text_bbox = (label_x, label_y, label_x + text_width, label_y + text_height)
             
             draw.rectangle(
                 [text_bbox[0] - 5, text_bbox[1] - 2, text_bbox[2] + 5, text_bbox[3] + 2],
                 fill=color
             )
-            draw.text((label_x, label_y), label, fill='white', font=font)
+            draw.text((label_x, label_y), render_label, fill='white', font=font)
         
         # 添加分析信息（右下角）
         info_text = f"{predicted_class.upper()} | {confidence*100:.1f}%"

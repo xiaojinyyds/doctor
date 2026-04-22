@@ -37,6 +37,7 @@ class MedicalImage(Base):
     __tablename__ = "medical_images"
     
     id = Column(String(36), primary_key=True, comment='影像ID')
+    tenant_id = Column(String(36), nullable=True, index=True, comment='所属租户ID')
     user_id = Column(String(36), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, comment='用户ID')
     
     # 文件信息
@@ -69,6 +70,7 @@ class ImageAnalysisResult(Base):
     __tablename__ = "image_analysis_results"
     
     id = Column(String(36), primary_key=True, comment='分析结果ID')
+    tenant_id = Column(String(36), nullable=True, index=True, comment='所属租户ID')
     image_id = Column(String(36), ForeignKey('medical_images.id', ondelete='CASCADE'), nullable=False, comment='影像ID')
     user_id = Column(String(36), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, comment='用户ID')
     

@@ -641,7 +641,7 @@ async def generate_ai_recommendation_stream(
     基于评估结果生成AI个性化健康建议（SSE流式输出）
     
     - 从数据库读取评估和问卷数据
-    - 调用GLM-4.6生成个性化建议
+    - 调用DeepSeek生成个性化建议
     - 实时流式返回生成内容
     - 生成完成后保存到数据库
     """
