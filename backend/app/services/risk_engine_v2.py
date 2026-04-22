@@ -66,7 +66,7 @@ class RiskAssessmentEngineV2:
                 'overall_risk': {
                     'score': float(risk_prob),
                     'level': risk_level,
-                    'percentile': int(risk_prob * 100)
+                    'percentile': int((1 - risk_prob) * 100)  # 修正：风险越低，百分位越高
                 },
                 'category_risks': category_risks,
                 'key_factors': key_factors,

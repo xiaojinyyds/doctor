@@ -395,10 +395,10 @@
     try {
       loading.value = true
 
-      // 🎯 优先从 state 中获取数据（列表页传递过来的）
+      // 优先从 state 中获取数据（列表页传递过来的）
       const stateData = (history.state as any)?.recordData
 
-      console.log('📋 管理端筛查记录详情')
+      console.log('管理端筛查记录详情')
       console.log('  - Record ID:', recordId.value)
       console.log(
         '  - 数据来源:',
@@ -407,17 +407,17 @@
 
       if (stateData) {
         // 使用传递过来的数据（无需请求API）
-        console.log('✅ 使用列表页传递的数据:', stateData)
+        console.log('使用列表页传递的数据:', stateData)
         fillDetailData(stateData)
       } else {
         // 降级方案：从 API 加载（例如用户直接访问详情页链接）
-        console.log('⚠️ 未检测到传递的数据，从API加载...')
+        console.log('未检测到传递的数据，从API加载...')
         const response = (await fetchScreeningRecord(recordId.value)) as any
-        console.log('✅ API数据加载成功:', response)
+        console.log('API数据加载成功:', response)
         fillDetailData(response)
       }
     } catch (error) {
-      console.error('❌ 加载筛查记录详情失败:', error)
+      console.error('加载筛查记录详情失败:', error)
       ElMessage.error('加载详情失败')
     } finally {
       loading.value = false

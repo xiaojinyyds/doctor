@@ -85,14 +85,16 @@ async def register(request: UserRegisterRequest, db: Session = Depends(get_db)):
                 detail="该邮箱已注册"
             )
         
-        # 3. 创建用户
+        # 3. 创建用户（B2B升级：默认分配到默认租户）
         user = User(
             id=generate_uuid(),
+            tenant_id="tenant-default",  # B2B升级：默认租户
             email=request.email,
             password_hash=get_password_hash(request.password),
             nickname=request.nickname or request.email.split('@')[0],
             role="user",
-            status="active"
+            status="active",
+            is_active="1"  # B2B升级
         )
         
         db.add(user)
@@ -102,8 +104,12 @@ async def register(request: UserRegisterRequest, db: Session = Depends(get_db)):
         # 4. 删除验证码
         redis_client.delete(cache_key)
         
-        # 5. 生成Token
-        access_token = create_access_token(data={"sub": user.id, "role": user.role})
+        # 5. 生成Token（B2B升级：包含租户ID和角色）
+        access_token = create_access_token(data={
+            "sub": user.id,
+            "tenant_id": user.tenant_id or "tenant-default",
+            "role": user.role
+        })
         
         return {
             "code": 200,
@@ -158,8 +164,12 @@ async def login(request: UserLoginRequest, db: Session = Depends(get_db)):
     user.last_login_at = datetime.now()
     db.commit()
     
-    # 5. 生成Token
-    access_token = create_access_token(data={"sub": user.id, "role": user.role})
+    # 5. 生成Token（B2B升级：包含租户ID和角色）
+    access_token = create_access_token(data={
+        "sub": user.id,
+        "tenant_id": user.tenant_id or "tenant-default",
+        "role": user.role
+    })
     
     return {
         "code": 200,

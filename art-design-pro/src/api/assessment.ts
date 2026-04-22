@@ -53,3 +53,11 @@ export function exportAssessment(record_id: string) {
     url: `/api/v1/assessment/export/${record_id}`
   })
 }
+
+// 获取风险趋势分析
+export function fetchRiskTrend(months: number = 12) {
+  return request.get<any>({
+    url: '/api/v1/assessment/trend',
+    params: { months }
+  })
+}

@@ -1,11 +1,11 @@
 /**
- * 风险评估 API V2.0
- * 适配后端 V2.0 增强模型和扩展问卷
+ * 风险评估 API
+ * 适配后端增强模型和扩展问卷
  */
 import request from '@/utils/http'
 
 /**
- * V2.0 问卷请求数据类型
+ * 问卷请求数据类型
  */
 export interface QuestionnaireV2Request {
   // ==================== 基础信息 ====================
@@ -98,7 +98,7 @@ export interface QuestionnaireV2Request {
 }
 
 /**
- * V2.0 评估响应数据类型
+ * 评估响应数据类型
  */
 export interface AssessmentV2Response {
   assessment_id: string
@@ -165,26 +165,26 @@ export interface AssessmentV2Response {
 }
 
 /**
- * 提交 V2.0 问卷并获取风险评估
+ * 提交问卷并获取风险评估
  */
 export async function submitAssessmentV2(data: QuestionnaireV2Request) {
-  console.log('🔵 API层 - 发送请求到:', '/api/v1/assessment/submit-v2')
-  console.log('🔵 API层 - 请求数据:', data)
+  console.log('API层 - 发送请求到:', '/api/v1/assessment/submit-v2')
+  console.log('API层 - 请求数据:', data)
   
   try {
     const result = await request.post<AssessmentV2Response>({
       url: '/api/v1/assessment/submit-v2',
       data,
       showSuccessMessage: false,
-      timeout: 60000  // V2.0 评估接口超时设置为 60 秒（1分钟）
+      timeout: 60000  // 评估接口超时设置为 60 秒（1分钟）
     })
     
-    console.log('🟢 API层 - 收到响应:', result)
-    console.log('🟢 API层 - 响应类型:', typeof result)
-    console.log('🟢 API层 - 是否为空:', result === null || result === undefined)
+    console.log('API层 - 收到响应:', result)
+    console.log('API层 - 响应类型:', typeof result)
+    console.log('API层 - 是否为空:', result === null || result === undefined)
     
     if (!result) {
-      console.error('🔴 API层 - 响应为空！这不正常，请检查：')
+      console.error('API层 - 响应为空！这不正常，请检查：')
       console.error('   1. 后端是否正确返回了 data 字段')
       console.error('   2. 后端返回的 code 是否为 200')
       console.error('   3. 请在浏览器 Network 面板查看原始响应')
@@ -193,8 +193,8 @@ export async function submitAssessmentV2(data: QuestionnaireV2Request) {
     
     return result
   } catch (error: any) {
-    console.error('🔴 API层 - 请求失败:', error)
-    console.error('🔴 错误详情:', {
+    console.error('API层 - 请求失败:', error)
+    console.error('错误详情:', {
       message: error.message,
       code: error.code,
       stack: error.stack

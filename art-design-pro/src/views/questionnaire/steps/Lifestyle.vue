@@ -154,7 +154,7 @@
       </ElFormItem>
 
       <ElDivider content-position="left">
-        <span style="color: var(--el-color-primary); font-weight: 600;">📋 详细饮食习惯（V2.0新增）</span>
+        <span style="color: var(--el-color-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;"><el-icon><Document /></el-icon>详细饮食习惯</span>
       </ElDivider>
 
       <!-- 蔬菜水果摄入 -->
@@ -220,7 +220,7 @@
       </ElFormItem>
 
       <ElDivider content-position="left">
-        <span style="color: var(--el-color-primary); font-weight: 600;">🧘 精神压力与作息（V2.0新增）</span>
+        <span style="color: var(--el-color-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;"><el-icon><User /></el-icon>精神压力与作息</span>
       </ElDivider>
 
       <!-- 压力水平 -->
@@ -257,6 +257,7 @@
 
 <script setup lang="ts">
 import type { FormRules } from 'element-plus'
+import { Document, User } from '@element-plus/icons-vue'
 
 interface FormData {
   smokingStatus: string
@@ -270,13 +271,13 @@ interface FormData {
   dietHabits: string[]
   sleepHours: number | null
   sleepQuality: string
-  // V2.0 新增：详细饮食习惯
+  // 详细饮食习惯
   vegetableFruitIntake: string
   redMeatIntake: string
   processedFoodIntake: string
   pickledFoodIntake: string
   dairyIntake: string
-  // V2.0 新增：精神压力与作息
+  // 精神压力与作息
   stressLevel: string
   workRestPattern: string
   mentalHealth: string
@@ -291,7 +292,7 @@ const rules: FormRules = {
   exerciseFrequency: [{ required: true, message: '请选择运动习惯', trigger: 'change' }],
   sleepHours: [{ required: true, message: '请输入每日睡眠时长', trigger: 'blur' }],
   sleepQuality: [{ required: true, message: '请选择睡眠质量', trigger: 'change' }],
-  // V2.0 新增字段验证
+  // 扩展字段验证
   vegetableFruitIntake: [{ required: true, message: '请选择蔬菜水果摄入频率', trigger: 'change' }],
   redMeatIntake: [{ required: true, message: '请选择红肉摄入频率', trigger: 'change' }],
   processedFoodIntake: [{ required: true, message: '请选择加工食品摄入频率', trigger: 'change' }],

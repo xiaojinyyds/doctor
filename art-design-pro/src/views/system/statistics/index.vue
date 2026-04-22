@@ -167,7 +167,7 @@
   const fetchDetailnumber = async () => {
     try {
       const response = (await fetchDetail()) as any
-      console.log('📊 统计数据详情:', response)
+      console.log('统计数据详情:', response)
 
       // 处理风险等级分布数据
       if (response.risk_level_distribution) {
@@ -187,7 +187,7 @@
         updateTrendChart()
       }
     } catch (error) {
-      console.error('❌ 获取统计数据详情失败:', error)
+      console.error('获取统计数据详情失败:', error)
       ElMessage.error('获取统计数据详情失败')
     }
   }
@@ -195,7 +195,7 @@
   const fetchStatistics = async () => {
     try {
       const response = (await fetchGetStatisticsOverview()) as any
-      console.log('📊 统计数据:', response)
+      console.log('统计数据:', response)
 
       statistics.totalUsers = response.total_users || 0
       statistics.todayNewUsers = response.today_new_users || 0
@@ -206,7 +206,7 @@
         statistics.normalUsers = response.role_distribution.user || 0
       }
     } catch (error) {
-      console.error('❌ 获取统计数据失败:', error)
+      console.error('获取统计数据失败:', error)
       ElMessage.error('获取统计数据失败')
     }
   }

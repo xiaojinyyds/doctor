@@ -13,5 +13,19 @@ export const riskRoutes: AppRouteRecord = {
     icon: '&#xe788;',
     roles: ['user', 'doctor', 'admin'],
     keepAlive: false
-  }
+  },
+  children: [
+    {
+      path: 'trend',
+      name: 'RiskTrend',
+      component: '/risk/trend',
+      meta: {
+        title: '风险趋势',
+        icon: '&#xe7a3;',
+        keepAlive: false,
+        isHideTab: true,
+        isHide: true
+      }
+    }
+  ]
 }

@@ -9,7 +9,7 @@
     <div class="dialog-content">
       <ElAlert type="info" :closable="false" show-icon>
         <template #title>
-          <strong>V2.0 增强版评估</strong> - 采用XGBoost机器学习模型，准确率81.21%
+          <strong>增强版评估</strong> - 采用XGBoost机器学习模型，准确率81.21%
         </template>
       </ElAlert>
 
@@ -17,7 +17,7 @@
         <div class="intro-header">
           <i class="iconfont-sys">&#xe788;</i>
           <h3>完整问卷评估（推荐）</h3>
-          <ElTag type="success" effect="dark">V2.0</ElTag>
+          <ElTag type="success" effect="dark">增强版</ElTag>
         </div>
         <p class="intro-desc">
           通过4步完整问卷，收集32个关键特征，提供：
@@ -183,35 +183,35 @@
     visible.value = false
   }
 
-  // 跳转到完整问卷（V2.0）
+  // 跳转到完整问卷
   function goToFullQuestionnaire() {
-    console.log('🚀 准备跳转到完整问卷页面...')
+    console.log('准备跳转到完整问卷页面...')
     
     // 调试：打印用户角色信息
     const userStore = useUserStore()
-    console.log('👤 当前用户角色:', userStore.info?.roles)
+    console.log('当前用户角色:', userStore.info?.roles)
     
     // 调试：打印所有已注册的路由
     const allRoutes = router.getRoutes()
-    console.log('📋 所有已注册路由数量:', allRoutes.length)
+    console.log('所有已注册路由数量:', allRoutes.length)
     
     // 查找问卷相关路由
     const questionnaireRoute = allRoutes.find(r => r.path === '/questionnaire' || r.name === 'Questionnaire')
     if (questionnaireRoute) {
-      console.log('✅ 找到问卷路由:', questionnaireRoute)
+      console.log('找到问卷路由:', questionnaireRoute)
     } else {
-      console.warn('⚠️ 未找到问卷路由！')
+      console.warn('未找到问卷路由！')
       console.log('已注册的路由列表:', allRoutes.map(r => ({ name: r.name, path: r.path })))
     }
     
     // 跳转到问卷页面
     router.push('/questionnaire')
       .then(() => {
-        console.log('✅ 路由跳转成功')
+        console.log('路由跳转成功')
         close()
       })
       .catch((err) => {
-        console.error('❌ 路由跳转失败:', err)
+        console.error('路由跳转失败:', err)
         ElMessage.error('页面跳转失败，请检查路由配置')
       })
   }

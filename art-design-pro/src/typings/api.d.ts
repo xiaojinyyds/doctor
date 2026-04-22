@@ -62,7 +62,7 @@ declare namespace Api {
       refreshToken: string
     }
 
-    /** 用户信息 */
+    /** 用户信息（B2B升级） */
     interface UserInfo {
       buttons: string[]
       roles: string[]
@@ -70,6 +70,16 @@ declare namespace Api {
       userName: string
       email: string
       avatar?: string
+      /** B2B升级：租户ID */
+      tenantId?: string
+      /** B2B升级：角色 */
+      role?: 'user' | 'doctor' | 'admin'
+      /** B2B升级：科室 */
+      department?: string
+      /** B2B升级：职称 */
+      title?: string
+      /** B2B升级：工号 */
+      employeeId?: string
     }
   }
 

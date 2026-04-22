@@ -6,10 +6,11 @@ from app.core.database import Base
 
 
 class Questionnaire(Base):
-    """问卷数据表"""
+    """问卷数据表（B2B升级）"""
     __tablename__ = "questionnaires"
     
     id = Column(String(36), primary_key=True)
+    tenant_id = Column(String(36), nullable=True, index=True)  # B2B升级
     user_id = Column(String(36), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     
     # 基本信息

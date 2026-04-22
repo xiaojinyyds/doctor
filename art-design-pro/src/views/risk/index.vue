@@ -2,6 +2,10 @@
   <div class="risk-page">
     <div class="toolbar">
       <ElButton type="primary" @click="openApply">申请评估</ElButton>
+      <ElButton type="warning" @click="goToTrend">
+        <i class="iconfont-sys">&#xe7a1;</i>
+        趋势分析
+      </ElButton>
       <ElButton
         type="success"
         :disabled="selectedIds.length !== 2"
@@ -133,6 +137,7 @@
 
 <script setup lang="ts">
   import { onMounted, ref } from 'vue'
+  import { useRouter } from 'vue-router'
   import {
     fetchAssessmentHistory,
     deleteAssessmentRecord,
@@ -148,6 +153,7 @@
 
   defineOptions({ name: 'RiskIndex' })
 
+  const router = useRouter()
   const items = ref<any[]>([])
   const loading = ref(false)
   const page = ref(1)
@@ -328,6 +334,10 @@
 
   function openApply() {
     applyVisible.value = true
+  }
+
+  function goToTrend() {
+    router.push('/risk/trend')
   }
 
   function openView(row: any) {

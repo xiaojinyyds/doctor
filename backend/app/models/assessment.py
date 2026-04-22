@@ -6,10 +6,11 @@ from app.core.database import Base
 
 
 class Assessment(Base):
-    """风险评估结果表"""
+    """风险评估结果表（B2B升级）"""
     __tablename__ = "assessments"
     
     id = Column(String(36), primary_key=True)
+    tenant_id = Column(String(36), nullable=True, index=True)  # B2B升级
     user_id = Column(String(36), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     questionnaire_id = Column(String(36), ForeignKey('questionnaires.id', ondelete='CASCADE'), nullable=False, index=True)
     
@@ -17,6 +18,15 @@ class Assessment(Base):
     overall_risk_score = Column(DECIMAL(5, 4), nullable=False)
     overall_risk_level = Column(String(20), nullable=False, index=True)
     risk_percentile = Column(Integer, nullable=True)
+    
+    # B2B升级：审核相关字段
+    status = Column(String(20), default='pending', nullable=False, index=True, comment='审核状态')
+    reviewed_by = Column(String(36), nullable=True, index=True, comment='审核医生ID')
+    reviewed_at = Column(TIMESTAMP, nullable=True, comment='审核时间')
+    doctor_comment = Column(Text, nullable=True, comment='医生意见')
+    doctor_risk_level = Column(String(20), nullable=True, comment='医生判断的风险等级')
+    is_batch = Column(String(1), default='0', nullable=False, comment='是否批量筛查')
+    batch_task_id = Column(String(36), nullable=True, index=True, comment='批量任务ID')
     
     # 分类风险（JSON）
     category_risks = Column(JSON, nullable=False)

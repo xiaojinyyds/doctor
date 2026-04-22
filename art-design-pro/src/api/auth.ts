@@ -23,7 +23,7 @@ export function fetchLogin(params: Api.Auth.LoginParams) {
 }
 
 /**
- * 获取用户信息
+ * 获取用户信息（B2B升级）
  * @returns 用户信息
  */
 export function fetchGetUserInfo() {
@@ -35,14 +35,20 @@ export function fetchGetUserInfo() {
       // 后端返回格式: { code: 200, message: "...", data: {...} }
       const userData = res.data || res
       
-      // 适配后端返回的用户信息格式
+      // 适配后端返回的用户信息格式（B2B升级）
       return {
         userId: userData.id || 0,
         userName: userData.nickname || userData.email || '',
         email: userData.email || '',
         avatar: userData.avatar_url || '',
         roles: [userData.role || 'user'],
-        buttons: []
+        buttons: [],
+        // B2B升级：新增字段
+        tenantId: userData.tenant_id,
+        role: userData.role,
+        department: userData.department,
+        title: userData.title,
+        employeeId: userData.employee_id
       } as Api.Auth.UserInfo
     })
 }

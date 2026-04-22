@@ -153,12 +153,12 @@
 
       const response = (await fetchGetScreeningRecords(params)) as any
 
-      console.log('📋 筛查记录接口返回数据:', response)
+      console.log('筛查记录接口返回数据:', response)
 
       tableData.value = response.records || []
       total.value = response.total || 0
     } catch (error) {
-      console.error('❌ 获取筛查记录失败:', error)
+      console.error('获取筛查记录失败:', error)
       ElMessage.error('获取数据失败')
     } finally {
       loading.value = false
@@ -182,7 +182,7 @@
   const viewDetail = async (id: string) => {
     try {
       const res = (await fetchScreeningRecord(id)) as any
-      console.log('📋 筛查记录详情:', res)
+      console.log('筛查记录详情:', res)
       // 跳转到详情页，并通过 state 传递数据
       router.push({
         path: `/system/screening-records/detail/${id}`,
@@ -192,7 +192,7 @@
         }
       })
     } catch (error) {
-      console.error('❌ 获取筛查记录详情失败:', error)
+      console.error('获取筛查记录详情失败:', error)
       ElMessage.error('加载报告失败')
     }
   }
@@ -209,7 +209,7 @@
           ElMessage.success('删除成功')
           fetchData()
         } catch (error) {
-          console.error('❌ 删除筛查记录失败:', error)
+          console.error('删除筛查记录失败:', error)
           ElMessage.error('删除失败')
         }
       })

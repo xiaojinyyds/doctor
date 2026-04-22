@@ -6,7 +6,7 @@
         <div class="hero-inner">
           <div class="badge-row">
             <span class="dot"></span>
-            <span class="badge">V2.0 增强评估</span>
+            <span class="badge">增强评估</span>
             <span class="sep">|</span>
             <span class="sub">肿瘤风险智能评估</span>
           </div>
@@ -192,13 +192,13 @@
       dietHabits: [] as string[],
       sleepHours: 7 as number | null,
       sleepQuality: '良好',
-      // V2.0 新增：详细饮食习惯
+      // 详细饮食习惯
       vegetableFruitIntake: '每天',
       redMeatIntake: '每周2-3次',
       processedFoodIntake: '偶尔',
       pickledFoodIntake: '很少',
       dairyIntake: '每天',
-      // V2.0 新增：精神压力与作息
+      // 精神压力与作息
       stressLevel: '中',
       workRestPattern: '规律',
       mentalHealth: '良好'
@@ -213,13 +213,13 @@
       surgeryDate: '',
       longTermMedication: [] as string[],
       otherMedication: '',
-      // V2.0 新增：环境与职业暴露
+      // 环境与职业暴露
       hasOccupationalExposure: false,
       occupationalExposureTypes: [] as string[],
       airQuality: '良好',
       hasPollutionExposure: false,
       livingEnvironment: '城市',
-      // V2.0 新增：女性特有因素
+      // 女性特有因素
       gender: '男', // 从basicInfo同步
       menstrualStatus: '正常',
       pregnancyCount: null as number | null,
@@ -234,7 +234,7 @@
       abnormalFindings: [] as string[],
       otherAbnormalities: '',
       lastCheckup: '1年内',
-      // V2.0 新增：筛查历史
+      // 筛查历史
       screeningItems: [] as string[],
       tumorMarkersResult: '正常',
       abnormalMarkers: '',
@@ -368,7 +368,7 @@
     }
   }
 
-  // 提交问卷（V2.0）
+  // 提交问卷
   const submitQuestionnaire = async () => {
     submitLoading.value = true
 
@@ -515,12 +515,12 @@
         notes: questionnaireData.symptoms.additionalNotes || undefined
       }
 
-      console.log('📤 提交V2.0问卷数据：', submitData)
+      console.log('提交问卷数据：', submitData)
 
-      // 调用 V2.0 API
+      // 调用评估 API
       const result = await submitAssessmentV2(submitData)
 
-      console.log('V2.0评估结果（原始）：', result)
+      console.log('评估结果（原始）：', result)
 
       // request 工具已经自动解包了 response.data.data
       // 所以 result 就是后端返回的 data 字段内容
@@ -581,7 +581,7 @@
     }
   })
 
-  // V2.0 新增：同步性别信息到medicalHistory（用于女性特有字段显示）
+  // 同步性别信息到medicalHistory（用于女性特有字段显示）
   watch(
     () => questionnaireData.basicInfo.gender,
     (newGender) => {

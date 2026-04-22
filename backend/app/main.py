@@ -9,10 +9,11 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api.v1 import auth, assessment, admin, share, knowledge, assessment_v2, upload, medical_image, medical_image_v2
+from app.api.v1 import auth, assessment, admin, share, knowledge, assessment_v2, upload, medical_image, medical_image_v2, doctor
 
 # 导入所有模型（确保表被创建）
 from app.models.user import User
+from app.models.tenant import Tenant  # B2B升级：导入租户模型
 from app.models.questionnaire import Questionnaire
 from app.models.assessment import Assessment, Recommendation, Report
 from app.models.medical_image import MedicalImage, ImageAnalysisResult, ImageAnnotation, HealthRecord
@@ -132,6 +133,13 @@ app.include_router(
     medical_image_v2.router,
     prefix="/api/v1/medical-image-v2",
     tags=["医学影像分析V2"]
+)
+
+# B2B升级：医生工作台路由
+app.include_router(
+    doctor.router,
+    prefix="/api/v1",
+    tags=["医生工作台"]
 )
 
 

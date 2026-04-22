@@ -11,7 +11,7 @@ import time
 from decimal import Decimal
 
 from app.core.database import get_db
-from app.core.security import get_current_user_id
+from app.core.security import get_current_user_id, get_current_user
 from app.models.questionnaire import Questionnaire
 from app.models.assessment import Assessment, Recommendation, Report
 from app.schemas.questionnaire import QuestionnaireV2Request
@@ -26,8 +26,8 @@ router = APIRouter()
 @router.post("/submit-v2", summary="提交问卷并获取风险评估（V2.0完整版）")
 async def submit_assessment_v2(
     questionnaire: QuestionnaireV2Request,
-    user_id: str = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)  # B2B升级：获取完整用户信息
 ):
     """
     提交完整问卷数据，使用V2.0模型进行风险评估
@@ -38,15 +38,22 @@ async def submit_assessment_v2(
     - 女性特有因素（4项）
     - 精神压力与作息（3项）
     - 体检与筛查历史（2项）
+    
+    **B2B升级：**
+    - 评估结果默认状态为 pending（待审核）
+    - 自动关联租户ID
     """
     try:
         start_time = time.time()
+        user_id = current_user.user_id  # B2B升级
+        tenant_id = current_user.tenant_id  # B2B升级
         
-        # 1. 保存问卷数据到数据库
+        # 1. 保存问卷数据到数据库（B2B升级：增加租户ID）
         questionnaire_id = generate_uuid()
         questionnaire_record = Questionnaire(
             id=questionnaire_id,
             user_id=user_id,
+            tenant_id=tenant_id,  # B2B升级
             
             # 基础信息
             age=questionnaire.age,
@@ -133,7 +140,7 @@ async def submit_assessment_v2(
             risk_result=result
         )
         
-        # 5. 保存评估结果
+        # 5. 保存评估结果（B2B升级：默认状态为pending）
         assessment_id = generate_uuid()
         assessment_record = Assessment(
             id=assessment_id,
@@ -147,7 +154,10 @@ async def submit_assessment_v2(
             shap_values=result.get('shap_values'),
             model_version='v2.0_enhanced',
             inference_time_ms=int((time.time() - start_time) * 1000),
-            ai_recommendation=ai_recommendation
+            ai_recommendation=ai_recommendation,
+            # B2B升级：新增字段
+            status='pending',  # 默认待审核
+            tenant_id=tenant_id  # 租户ID
         )
         
         db.add(assessment_record)

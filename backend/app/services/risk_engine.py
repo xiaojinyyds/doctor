@@ -200,8 +200,15 @@ class RiskAssessmentEngine:
             return "高风险"
     
     def _calculate_percentile(self, score: float) -> int:
-        """计算风险百分位"""
-        return int(score * 100)
+        """
+        计算风险百分位（修正版）
+        
+        逻辑：风险分数越低越好，所以要反转
+        - 风险分数 0.01 → 百分位 99（超越99%的人，很健康）
+        - 风险分数 0.50 → 百分位 50（中等水平）
+        - 风险分数 0.99 → 百分位 1（只超越1%的人，很危险）
+        """
+        return int((1 - score) * 100)
     
     def _get_key_factors(self, shap_values: np.ndarray, features_df: pd.DataFrame, 
                          user_data: dict) -> List[Dict]:

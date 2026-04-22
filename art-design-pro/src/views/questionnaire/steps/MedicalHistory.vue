@@ -135,7 +135,7 @@
       </ElRow>
 
       <ElDivider content-position="left">
-        <span style="color: var(--el-color-primary); font-weight: 600;">🏭 环境与职业暴露（V2.0新增）</span>
+        <span style="color: var(--el-color-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;"><el-icon><OfficeBuilding /></el-icon>环境与职业暴露</span>
       </ElDivider>
 
       <!-- 职业暴露 -->
@@ -197,7 +197,7 @@
         v-if="formData.gender === '女'" 
         content-position="left"
       >
-        <span style="color: var(--el-color-primary); font-weight: 600;">👩 女性特有因素（V2.0新增）</span>
+        <span style="color: var(--el-color-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;"><el-icon><User /></el-icon>女性特有因素</span>
       </ElDivider>
 
       <template v-if="formData.gender === '女'">
@@ -295,6 +295,7 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import type { FormRules } from 'element-plus'
+import { OfficeBuilding, User } from '@element-plus/icons-vue'
 
 interface FormData {
   chronicDiseases: string[]
@@ -306,13 +307,13 @@ interface FormData {
   surgeryDate: string
   longTermMedication: string[]
   otherMedication: string
-  // V2.0 新增：环境与职业暴露
+  // 环境与职业暴露
   hasOccupationalExposure: boolean
   occupationalExposureTypes: string[]
   airQuality: string
   hasPollutionExposure: boolean
   livingEnvironment: string
-  // V2.0 新增：女性特有因素
+  // 女性特有因素
   gender?: string
   menstrualStatus: string
   pregnancyCount: number | null
@@ -334,7 +335,7 @@ const rules: FormRules = {
   surgeryDate: [
     { required: true, message: '请选择手术时间', trigger: 'change' }
   ],
-  // V2.0 新增字段验证
+  // 扩展字段验证
   hasOccupationalExposure: [{ required: true, message: '请选择是否有职业暴露', trigger: 'change' }],
   airQuality: [{ required: true, message: '请选择空气质量', trigger: 'change' }],
   hasPollutionExposure: [{ required: true, message: '请选择是否有污染暴露', trigger: 'change' }],
@@ -369,7 +370,7 @@ watch(
   }
 )
 
-// V2.0 新增：监听激素治疗类型
+// 监听激素治疗类型
 watch(
   () => formData.value.hormoneTherapyTypes,
   (newVal) => {

@@ -58,7 +58,7 @@
       </ElRow>
 
       <ElDivider content-position="left">
-        <span style="color: var(--el-color-primary); font-weight: 600;">🏥 体检与筛查历史（V2.0新增）</span>
+        <span style="color: var(--el-color-primary); font-weight: 600; display: inline-flex; align-items: center; gap: 6px;"><el-icon><FirstAidKit /></el-icon>体检与筛查历史</span>
       </ElDivider>
 
       <!-- 上次体检时间 -->
@@ -175,6 +175,7 @@
 <script setup lang="ts">
 import { watch } from 'vue'
 import type { FormRules } from 'element-plus'
+import { FirstAidKit } from '@element-plus/icons-vue'
 
 interface FormData {
   recentSymptoms: string[]

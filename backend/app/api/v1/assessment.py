@@ -735,3 +735,149 @@ async def generate_ai_recommendation_stream(
         }
     )
 
+
+@router.get("/trend", response_model=dict, summary="获取风险趋势分析")
+async def get_risk_trend(
+    months: int = Query(12, ge=1, le=60, description="查询近N个月的数据"),
+    user_id: str = Depends(get_current_user_id),
+    db: Session = Depends(get_db)
+):
+    """
+    获取用户风险趋势分析数据，包含各分类风险历史走势和AI洞察
+    """
+    from datetime import timedelta
+    
+    # 查询时间范围内的评估记录
+    start_date = datetime.now() - timedelta(days=30 * months)
+    
+    assessments = db.query(Assessment).filter(
+        Assessment.user_id == user_id,
+        Assessment.created_at >= start_date
+    ).order_by(Assessment.created_at.asc()).all()
+    
+    if not assessments or len(assessments) < 1:
+        return {
+            "code": 200,
+            "message": "暂无评估记录",
+            "data": {
+                "has_data": False,
+                "insights": "暂无评估数据，建议完成首次风险评估",
+                "trend_data": []
+            }
+        }
+    
+    # 构建趋势数据
+    trend_data = []
+    for assessment in assessments:
+        # 解析分类风险数据
+        category_risks = assessment.category_risks or {}
+        
+        trend_data.append({
+            "assessment_id": assessment.id,
+            "date": assessment.created_at.strftime("%Y-%m-%d"),
+            "month": assessment.created_at.strftime("%Y-%m"),
+            "overall_score": float(assessment.overall_risk_score),
+            "overall_level": assessment.overall_risk_level,
+            "risk_percentile": assessment.risk_percentile,
+            "category_scores": {
+                "lung": float(category_risks.get("lung", {}).get("score", 0)),
+                "liver": float(category_risks.get("liver", {}).get("score", 0)),
+                "stomach": float(category_risks.get("stomach", {}).get("score", 0)),
+                "colorectal": float(category_risks.get("colorectal", {}).get("score", 0)),
+                "breast": float(category_risks.get("breast", {}).get("score", 0)),
+                "esophageal": float(category_risks.get("esophageal", {}).get("score", 0))
+            },
+            "key_factors": [
+                {
+                    "factor": factor.get("factor", ""),
+                    "importance": float(factor.get("importance", 0)),
+                    "contribution": float(factor.get("contribution", 0))
+                }
+                for factor in (assessment.key_factors or [])[:3]
+            ]
+        })
+    
+    # 计算改善指标
+    improvements = []
+    risk_changes = []
+    
+    for i in range(1, len(trend_data)):
+        prev = trend_data[i - 1]
+        curr = trend_data[i]
+        
+        # 综合风险变化
+        overall_change = curr["overall_score"] - prev["overall_score"]
+        risk_changes.append({
+            "period": f"{prev['month']} -> {curr['month']}",
+            "change": round(overall_change, 4),
+            "direction": "下降" if overall_change < 0 else "上升" if overall_change > 0 else "持平"
+        })
+        
+        # 各分类风险变化
+        for category in ["lung", "liver", "stomach", "colorectal", "breast", "esophageal"]:
+            cat_change = curr["category_scores"][category] - prev["category_scores"][category]
+            if abs(cat_change) >= 0.05:  # 变化超过5%才记录
+                improvements.append({
+                    "period": f"{prev['month']} -> {curr['month']}",
+                    "category": category,
+                    "change": round(cat_change, 4),
+                    "direction": "改善" if cat_change < 0 else "上升"
+                })
+    
+    # 生成趋势洞察文案
+    first_record = trend_data[0]
+    latest_record = trend_data[-1]
+    total_change = latest_record["overall_score"] - first_record["overall_score"]
+    
+    # 根据变化趋势生成不同的洞察
+    if len(trend_data) == 1:
+        insights = "您已完成首次风险评估，建议保持健康生活方式并定期复查。"
+    elif total_change < -0.1:
+        insights = f"恭喜！您的风险评分较 {len(trend_data)} 个月前下降了 {abs(total_change)*100:.1f}%，健康管理效果显著。请继续保持良好的生活习惯。"
+    elif total_change > 0.1:
+        insights = f"注意：您的风险评分较 {len(trend_data)} 个月前上升了 {total_change*100:.1f}%。建议加强健康管理，如有疑虑请咨询专业医生。"
+    else:
+        insights = f"您的风险水平在 {len(trend_data)} 个月内保持稳定，风险评分波动在 {(abs(total_change)*100):.1f}% 以内。继续保持现有的健康管理措施。"
+    
+    # 添加具体改善建议
+    if improvements:
+        recent_improvements = [imp for imp in improvements if imp["direction"] == "改善"][-3:]
+        if recent_improvements:
+            insights += f" 其中，{'、'.join([get_category_name(imp['category']) for imp in recent_improvements])}风险有所改善。"
+    
+    return {
+        "code": 200,
+        "message": "获取成功",
+        "data": {
+            "has_data": True,
+            "total_records": len(trend_data),
+            "time_range": {
+                "start": trend_data[0]["date"],
+                "end": trend_data[-1]["date"]
+            },
+            "latest_score": latest_record["overall_score"],
+            "latest_level": latest_record["overall_level"],
+            "first_score": first_record["overall_score"],
+            "total_change": round(total_change, 4),
+            "change_percentage": round(total_change * 100, 2),
+            "trend_direction": "下降" if total_change < 0 else "上升" if total_change > 0 else "持平",
+            "insights": insights,
+            "improvements": improvements,
+            "risk_changes": risk_changes,
+            "trend_data": trend_data
+        }
+    }
+
+
+def get_category_name(category_code: str) -> str:
+    """获取分类风险的中文名称"""
+    category_names = {
+        "lung": "肺癌",
+        "liver": "肝癌",
+        "stomach": "胃癌",
+        "colorectal": "肠癌",
+        "breast": "乳腺癌",
+        "esophageal": "食管癌"
+    }
+    return category_names.get(category_code, category_code)
+
